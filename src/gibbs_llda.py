@@ -21,6 +21,29 @@ def run_estEntropyGibbs(map_args):
         (Hhat[idx], rng) = estimate_entropy_single(rng, phi, this_z, count_z, ppi, K, Nl, Nd, beta, d, n)
     return (Hhat, rng)
 
+def relabel_samples(map_args):
+    phi_target, phi, theta, count_z, z = map_args
+    K, W, Nsamp = phi.shape
+    Nd, D, tmp = z.shape
+
+    # loop over samples
+    phi_new = np.zeros(phi.shape)
+    theta_new = np.zeros(theta.shape)
+    count_z_new = np.zeros(count_z.shape, dtype='int')
+    z_new = np.zeros(z.shape, dtype='int')
+    for isamp in range(Nsamp):
+        phi_new[...,isamp], new_k, tmp = utils.align_topics(phi_target, phi[...,isamp])
+        theta_new[...,isamp] = theta[:,new_k,isamp]
+        count_z_new[...,isamp] = count_z[:,new_k,isamp]
+
+        # relabel topic assignments
+        z_tmp = z[...,isamp].copy()
+        for k in range(K):
+            idx_k = np.where( z_tmp == k )
+            z_new[ idx_k[0], idx_k[1], isamp ] = new_k[k]
+
+    return (phi_new, theta_new, count_z_new, z_new)
+
 def init_samples(rng, W, K, D, alpha, beta):
     phi = np.zeros((K,W))
     for k in range(K):
@@ -32,7 +55,6 @@ def gibbs(map):
     """
     Gibbs sampler for LLDA
     """
-
     (rng, W, K, D, Nd, Nl, labels, wordids, alpha, beta, ppi, Nsamp, burn) = map
 
     # samples
@@ -111,8 +133,6 @@ def eval_logjoint(alpha, beta, ppi, labels, wordids, phi, theta, z=[]):
     D = len( wordids )
     Nd = len( wordids[0] )
 
-    # import ipdb;  ipdb.set_trace()
-
     # topic prior
     logp = 0.
     for k in range(K):
@@ -154,19 +174,29 @@ def estimate_entropy_single(rng, phi, z, count_z, ppi, K, Nl, Nd, beta, d, n):
 
     # split samples
     Nsamp_tot = len(z)
-    Nsamp = int(np.ceil(Nsamp_tot / 2))
-    z_samp = z[0:Nsamp]
-    z_samp_marg = z[Nsamp:]
-    count_z_samp_marg = count_z[:, :, Nsamp:]  # W x K x Nsamp
-    phi_samp = phi[:, :, 0:Nsamp] # K, W, Nsamp
+    Nsamp = Nsamp_tot # int(np.ceil(Nsamp_tot / 2))
+    z_samp = z # z[0:Nsamp]
+    z_samp_marg = z # z[Nsamp:]
+    count_z_samp_marg = count_z # count_z[:, :, Nsamp:]  # W x K x Nsamp
+    phi_samp = phi # phi[:, :, 0:Nsamp] # K, W, Nsamp
+
+    # # DEBUG: Don't split samples
+    # Nsamp_tot = len(z)
+    # Nsamp = Nsamp_tot
+    # z_samp = z
+    # z_samp_marg = z
+    # count_z_samp_marg = count_z
+    # phi_samp = phi
 
     # sample Y's from joint
     likelihood = ppi[z_samp, :]  # Nsamp x Nl
     y_samp = np.zeros((Nsamp, Nl), dtype='int')
-    for i in range(len(y_samp)): # TODO: vectorize
+    for i in range(Nsamp): # TODO: vectorize
         y_samp[i, :] = rng.multinomial(1, likelihood[i, :])
 
     # estimate marginal posterior p(y | Data)
+    # NOTE: Can speed this up by computing p(Y|Data) for each possible value Y
+    # then populate array phat_y
     likelihood_marg = ppi[z_samp_marg, :]  # Nsamp x Nl
     phat_y = np.zeros(Nsamp)
     for i in range(Nsamp): # TODO: vectorize
@@ -196,6 +226,7 @@ def estimate_entropy_single(rng, phi, z, count_z, ppi, K, Nl, Nd, beta, d, n):
         log_phat_joint[i] = log_Z + np.log(np.sum(np.exp(tmp_logp), axis=0))
 
     # estimate conditional entropy
-    Hhat = 1 / Nsamp * np.sum(np.log(phat_y) - log_phat_joint, axis=0)
-    return (Hhat, rng)
-
+    Hjoint = 1 / Nsamp * np.sum( - log_phat_joint, axis=0)
+    Hmarg = 1 / Nsamp * np.sum( - np.log( phat_y ), axis=0 )
+    Hcond = Hjoint - Hmarg
+    return (Hcond, rng)

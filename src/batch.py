@@ -12,7 +12,7 @@
 #
 # This program is free software: you can redistribute it and/or modify it under the
 # terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or (at your option) any later version.
+# Foundation, eith
 #
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -28,9 +28,6 @@ import utils, gibbs_llda, ep_llda
 import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
-
-def chunk(l, n):
-    return [l[i:i+n] for i in range(0, len(l), n)]
 
 # Filtering with EP as primitive (LLDA)
 class LLDA_EP:
@@ -94,7 +91,7 @@ class LLDA_EP:
         # where N_d is the number of words in the d-th document
         self._zeta.clear()
         for d in range(0, self._D):
-            self._zeta.append(np.zeros([self._N[d], self._K])) # np.random.rand(self._N[d], self._K)) #
+            self._zeta.append(np.zeros([self._N[d], self._K]))
 
         # Initialize the variational distribution q(beta | lambda)
         # with lambda_k = eta_k + \sum_d \sum_n omega_kdn
@@ -105,13 +102,11 @@ class LLDA_EP:
         for k in range(0, self._K):
             omega_k = list()
             for d in range(0, self._D):
-                omega_k.append(np.zeros([self._N[d], self._W])) # np.random.rand(self._N[d], self._W)) #
+                omega_k.append(np.zeros([self._N[d], self._W]))
             self._omega.append(omega_k)
 
-        # Initialize lambda and gamma to be equal to the prior eta and alpha
+        # Initialize lambda and gamma to be equal to the prior beta and alpha
         # (Note: This assumes omega and zeta to be initialized to 0)
-        # self._lambda = np.empty_like(self._eta)  # K-by-W array
-        # self._lambda[:] = self._eta # copy eta
         self._lambda = self._beta.copy()
         self._gamma = self._alpha * np.ones([self._D, self._K])
 
@@ -121,8 +116,8 @@ class LLDA_EP:
         """
         doclist, wordlist = np.where( self._labels == -1 )
         sizeOfChunks = int(math.ceil(len(doclist) / float(self._numWorkers)))
-        docchunks = chunk(doclist, sizeOfChunks)
-        wordchunks = chunk(wordlist, sizeOfChunks)
+        docchunks = utils.chunk(doclist, sizeOfChunks)
+        wordchunks = utils.chunk(wordlist, sizeOfChunks)
         numTasks = len(docchunks)
 
         # random planning
@@ -139,10 +134,22 @@ class LLDA_EP:
             if (algname == 'variational'):
                 if self._numWorkers > 1:
                     estimates = self._pool.map(ep_llda.run_vibound_EPLLDA,
-                      [ (self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docs, words)
-                        for docs, words in zip(docchunks, wordchunks) ])
+                      [ (self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda,
+                         self._omega, docs, words) for docs, words in zip(docchunks, wordchunks) ])
                 else:
                     estimates = ep_llda.run_vibound_EPLLDA((self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0]))
+
+            # "discriminative" variational
+            elif (algname == 'discvar'):
+                if self._numWorkers > 1:
+                    res = self._pool.map(ep_llda.run_discvibound_EPLLDA,
+                      [ (self._rngs[i], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta,
+                         self._lambda, self._omega, docs, words, self._Nsamp)
+                         for i, docs, words in zip(range(numTasks),docchunks, wordchunks) ])
+                    estimates = [ res[i][0] for i in range(numTasks) ]
+                    self._rngs[0:numTasks] = [ res[i][1] for i in range(numTasks) ]
+                else:
+                    estimates, self._rngs[0] = ep_llda.run_discvibound_EPLLDA((self._rngs[0], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0], self._Nsamp))
 
             # sample variational posterior
             elif (algname =='empirical'):
@@ -420,8 +427,9 @@ class LLDA_Gibbs:
 
         # single-threaded fitting
         else:
-            phi_map, logp_map, self._phi, self._theta, self._z, self._count_z, logp_trace, tmp = gibbs_llda.gibbs(
-                (self._rngs, self._W, self._K, self._D, self._Nd, self._Nl, self._labels, self._wordids,
+            phi_map, logp_map, self._phi, self._theta, self._z, self._count_z, \
+                logp_trace, self._rngs[0] = gibbs_llda.gibbs( (self._rngs[0], self._W,
+                self._K, self._D, self._Nd, self._Nl, self._labels, self._wordids,
                 self._alpha, self._beta, self._ppi, self._Nsamp, self._burn))
 
         # DEBUG: Show traceplots
@@ -452,9 +460,27 @@ class LLDA_Gibbs:
             utils.show_bars_topics(phi_map, self._W, self._K)
             plt.show()
 
+        # # DEBUG: Show all samples *before* relable
+        # if debug:
+        #     for isamp in range(self._Nsamp):
+        #         fig, axs = utils.show_bars_topics(self._phi[...,isamp], self._W, self._K)
+        #         fig.suptitle('Sample %d (Before)' % isamp)
+
         # return posterior mean estimate
-        self.relabel_samples(phi_map)
+        self.relabel_samples(self._phi_true)
         phi_avg = 1 / self._Nsamp * np.sum(self._phi, axis=2)
+
+        # # DEBUG: Show all samples *after* relable
+        # if debug:
+        #     fig, axs = utils.show_bars_topics(phi_avg, self._W, self._K)
+        #     fig.suptitle('Average')
+        #     fig, axs = utils.show_bars_topics(phi_map, self._W, self._K)
+        #     fig.suptitle('MAP')
+        #     for isamp in range(self._Nsamp):
+        #         fig, axs = utils.show_bars_topics(self._phi[...,isamp], self._W, self._K)
+        #         fig.suptitle('Sample %d (After)' % isamp)
+        #     plt.show()
+
         return phi_avg
 
     def relabel_samples(self, phi_target):
@@ -462,17 +488,27 @@ class LLDA_Gibbs:
         Relabel topics on all samples to be consistent with target.
         """
 
-        # loop over samples
-        for isamp in range(self._Nsamp):
-            self._phi[...,isamp], new_k, tmp = utils.align_topics(phi_target, self._phi[:,:,isamp])
-            self._theta[...,isamp] = self._theta[:,new_k,isamp]
-            self._count_z[...,isamp] = self._count_z[:,new_k,isamp]
+        sizeOfChunks = int(math.ceil(self._Nsamp / float(self._numWorkers)))
+        phi_chunks = utils.chunk_array(self._phi, sizeOfChunks)
+        theta_chunks = utils.chunk_array(self._theta, sizeOfChunks)
+        count_z_chunks = utils.chunk_array(self._count_z, sizeOfChunks)
+        z_chunks = utils.chunk_array(self._z, sizeOfChunks)
+        numTasks = len(phi_chunks)
 
-            # relabel topic assignments
-            this_z = self._z.copy()
-            for k in range(self._K):
-                idx_k = np.where( this_z == k )
-                self._z[ idx_k[0], idx_k[1], idx_k[2] ] = new_k[k]
+        if self._numWorkers > 1:
+            res = self._pool.map(gibbs_llda.relabel_samples,
+                [ (phi_target, phi_chunks[i], theta_chunks[i], count_z_chunks[i], z_chunks[i])
+                    for i in range(numTasks) ] )
+
+            self._phi = np.concatenate([ res[i][0] for i in range(numTasks) ], axis=2)
+            self._theta = np.concatenate([ res[i][1] for i in range(numTasks) ], axis=2)
+            self._count_z = np.concatenate([ res[i][2] for i in range(numTasks) ], axis=2)
+            self._z = np.concatenate([ res[i][3] for i in range(numTasks) ], axis=2)
+
+        else:
+            self._phi, self._theta, self._count_z, self._z = gibbs_llda.relabel_samples(
+                ( phi_target, phi_chunks[0], theta_chunks[0], count_z_chunks[0], z_chunks[0]) )
+
 
     def label_element(self, labels_all, algname):
         """
@@ -482,31 +518,45 @@ class LLDA_Gibbs:
         # find unlabeled words and "chunk" them
         doclist, wordlist = np.where( self._labels == -1 )
         sizeOfChunks = int(math.ceil(len(doclist) / float(self._numWorkers)))
-        docchunks = chunk(doclist, sizeOfChunks)
-        wordchunks = chunk(wordlist, sizeOfChunks)
+        docchunks = utils.chunk(doclist, sizeOfChunks)
+        wordchunks = utils.chunk(wordlist, sizeOfChunks)
         numTasks = len(docchunks)
 
+        # random planning
+        if (algname == 'random'):
+            N = len( doclist )
+            idx = np.random.randint( N )
+            d_new, n_new = (doclist[idx], wordlist[idx])
+            Hhat = []
+
         # build argument lists for each worker
-        if self._numWorkers > 1:
-            args = [(self._rngs[i], self._phi, self._z, self._count_z, self._ppi, self._K,
-                self._Nl, self._Nd, self._beta, docs, words)
-                for i, docs, words in zip(range(numTasks), docchunks, wordchunks)]
-            res = self._pool.map(gibbs_llda.run_estEntropyGibbs, args)
-
-            # unpack retvals
-            Hhat = [ res[i][0] for i in range(self._numWorkers) ]
-            self._rngs[0:numTasks] = [ res[i][1] for i in range(numTasks) ]
         else:
-            Hhat, self._rngs[0] = gibbs_llda.run_estEntropyGibbs((self._rngs[0], self._phi, self._z,
-                self._count_z, self._ppi, self._K, self._Nl, self._Nd, self._beta,
-                docchunks[0], wordchunks[0]))
 
-        # estimate entropy
-        Hhat = np.concatenate(Hhat).flatten()
+            # parallel planning
+            if self._numWorkers > 1:
+                args = [(self._rngs[i], self._phi, self._z, self._count_z, self._ppi, self._K,
+                    self._Nl, self._Nd, self._beta, docs, words)
+                    for i, docs, words in zip(range(numTasks), docchunks, wordchunks)]
+                res = self._pool.map(gibbs_llda.run_estEntropyGibbs, args)
 
-        # rank conditional entropy
-        idx = np.argmin(Hhat)
-        d_new, n_new = (doclist[idx], wordlist[idx])
+                # unpack retvals
+                Hhat = [ res[i][0] for i in range(numTasks) ]
+                self._rngs[0:numTasks] = [ res[i][1] for i in range(numTasks) ]
+
+            # sequential planning
+            else:
+                Hhat, self._rngs[0] = gibbs_llda.run_estEntropyGibbs((self._rngs[0], self._phi, self._z,
+                    self._count_z, self._ppi, self._K, self._Nl, self._Nd, self._beta,
+                    docchunks[0], wordchunks[0]))
+
+            # estimate etropy
+            Hhat = np.concatenate(Hhat).flatten()
+
+            # rank conditional entropy
+            idx = np.argmin(Hhat)
+            d_new, n_new = (doclist[idx], wordlist[idx])
+
+        # return stuff
         self._labels[d_new, n_new] = labels_all[d_new, n_new]
         return (d_new, n_new, self._labels[d_new, n_new], Hhat)
 
@@ -514,23 +564,24 @@ class LLDA_Gibbs:
         """
         Estimate entropy of topic distribution on current samples.
         """
+
         # split samples
-        Nsamp = int(np.ceil(self._Nsamp / 2))
-        count_z_samp_marg = self._count_z[:, :, Nsamp:]  # W x K x Nsamp
-        phi_samp = self._phi[:, :, 0:Nsamp] # K, W, Nsamp
+        Nsamp = int(np.ceil(self._Nsamp / 2)) # self._Nsamp #
+        count_z_samp_marg = self._count_z[:, :, Nsamp:]  # W x K x Nsamp # self._count_z #
+        phi_samp = self._phi[:, :, 0:Nsamp] # K, W, Nsamp # self._phi #
 
-        # estimate all log-marginals p(phi_i | Data)
-        logp = np.zeros(Nsamp)
-        for i_phi in range(Nsamp):
-            phi_i = phi_samp[...,i_phi]
+        # compute Dirichlet conditional p(\phi | z, words)
+        log_pcond_phi = np.zeros((self._K,Nsamp, Nsamp))  # K x phi-samples x z-samples
+        beta_sim = self._beta.T[:, :, np.newaxis] + count_z_samp_marg  # W x K x Nsamp
+        for k in range(self._K):
+            log_pcond_phi[k] = \
+                utils.dirichlet_logpdf(phi_samp[k, ...], beta_sim[:, k, :])
 
-            # estimate conditional p(phi_i | z_j, Data)
-            pcond = np.zeros(Nsamp)
-            for j_z in range(Nsamp):
-                for k in range(self._K):
-                    beta_k = self._beta[k] + count_z_samp_marg[:,k,j_z]
-                    pcond[j_z] += stats.dirichlet.pdf(phi_i[k], beta_k)
-            logp[i_phi] = np.log( 1/Nsamp * np.sum(pcond) )
+        # estimate marginal p(\phi | words)
+        logZ = np.max( log_pcond_phi, axis=2 ) # K x phi-samples
+        pcond_phi = np.exp( log_pcond_phi - logZ[...,np.newaxis] ) # K x phi-samples x z-samples
+        logp_phi = logZ + np.log( 1/Nsamp * np.sum(pcond_phi, axis=2) ) # K x phi-samples
 
-        Hhat = 1/Nsamp * np.sum( - logp )
+        # estimate entropy
+        Hhat = 1/Nsamp * np.sum( - logp_phi, axis=1 )
         return Hhat

@@ -11,45 +11,15 @@ eps = np.spacing(1)
 
 # settings
 resdir = '../data/'
-name = 'SPARSEBARS'
+name = 'SIMLLDA'
 alpha = 1     # Document-level proportion Dirichlet param.
 beta = 1      # Topic Dirichlet parameter
 gamma = 0.1   # Label Dirichlet hyperparameter
-D = 50      # Number of documents
-Nd = 25      # Number of words
+D = 50        # Number of documents
+Nd = 25       # Number of words
+K = 10
+W = 25
 plabel = eps  # Probability of 'incorrect' annotation
-
-# define "bars" topic dimensions
-bar_width = 1    # Bar width
-num_bars = 5     # Number of bars in each topic
-K = 2*num_bars   # Number of topics (don't change)
-V = (bar_width*num_bars)**2   # Vocabulary size (don't change)
-
-# DEBUG: Make rare topic
-alpha = np.ones(K)
-alpha[0] = 0.05
-
-# "vertical" topics
-phi = np.zeros((K,V))
-start_col = 0
-for n in range(num_bars):
-    this_topic = eps + np.zeros( (bar_width*num_bars, bar_width*num_bars) )
-    end_col = start_col + bar_width
-    this_topic[ :, start_col:end_col ] = 1
-    phi[n,:] = this_topic.flatten() / np.sum( this_topic.flatten() )
-    start_col = end_col
-
-# "horizontal" topics
-start_row = 0
-for n in range(num_bars):
-    this_topic = eps + np.zeros( (bar_width*num_bars, bar_width*num_bars) )
-    end_row = start_row + bar_width
-    this_topic[ start_row:end_row, : ] = 1
-    phi[(num_bars+n),:] = this_topic.flatten() / np.sum( this_topic.flatten() )
-    start_row = end_row
-
-# document-level topic proportions
-theta = np.random.dirichlet( alpha * np.ones(K), D )
 
 # set label distribution to prefer true topic
 Nl = K          # Annotation labels = Topics (don't change)
@@ -61,8 +31,15 @@ fig_doc, axs_doc = plt.subplots(5, 5)
 fig_doc.suptitle('Documents')
 axs_doc = axs_doc.reshape(5*5)
 
-# sample documents
-wordcount = np.zeros((V,D));  labels = np.zeros((Nd,D), dtype='int')
+# draw topics and topic proportions
+phi = np.zeros((K,W))
+for k in range(K):
+    phi[k,:] = np.random.dirichlet(beta * np.ones(W))
+theta = np.random.dirichlet(alpha * np.ones(K), size=D )
+
+# draw documents
+wordcount = np.zeros((W,D))
+labels = np.zeros((Nd,D), dtype='int')
 z = np.zeros((D,Nd), dtype='int')
 for d in range(D):
 
@@ -74,11 +51,11 @@ for d in range(D):
     w_d = np.zeros((Nd,), dtype='int')
     l_d = np.zeros((Nd,), dtype='int')
     for n in range(Nd):
-        w_d[n] = np.random.choice(V, (1,), p=phi[z_d[n],:])
+        w_d[n] = np.random.choice(W, (1,), p=phi[z_d[n],:])
         l_d[n] = np.random.choice(Nl, (1,), p=ppi[z_d[n],:])
 
     # compute wordcounts
-    this_wordcount, tmp = np.histogram(w_d, range(V+1))
+    this_wordcount, tmp = np.histogram(w_d, range(W+1))
     wordcount[:,d] = this_wordcount
 
     # aggregate labels
@@ -88,13 +65,12 @@ for d in range(D):
     # show document
     if d<25:
         axs_doc[d].imshow(
-            np.reshape( this_wordcount, [bar_width*num_bars, bar_width*num_bars] ), cmap="gray" )
+            np.reshape( this_wordcount, (5,5) ), cmap="gray" )
         axs_doc[d].set_xticks([])
         axs_doc[d].set_yticks([])
 
-
 # show topics
-utils.show_bars_topics(phi, V, K)
+utils.show_bars_topics(phi, W, K)
 plt.show()
 
 # write model
@@ -106,5 +82,5 @@ f.close()
 print('Saved model: %s' % fname_model)
 
 # write vocab / data
-utils.write_vocab(resdir, name, V)
+utils.write_vocab(resdir, name, W)
 utils.write_data(resdir, name, wordcount, labels)

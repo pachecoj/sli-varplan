@@ -79,7 +79,7 @@ def loadLabels(path):
             i += 1
 
     print("done.")
-    return n.array(docs)
+    return n.array(docs, dtype='int')
 
 
 class Corpus:

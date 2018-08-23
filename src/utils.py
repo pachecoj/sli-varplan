@@ -32,11 +32,31 @@ import matplotlib.pyplot as plt
 # This is used in BatchVB's do_e_step
 meanchangethresh = 0.00001
 
+def catrnd(p):
+    """ Sample categorical random variables.
+
+    Args:
+    p (ndarray): NxD array, N separate trials each with D outcomes. Assumes that
+    the columns of p all sum to 1.
+    """
+    cs = np.cumsum(p, axis=1)
+    rv = np.random.rand(p.shape[0])[:,np.newaxis]
+    return np.argmax(rv <= cs, axis=1)
+
+def chunk(l, numchunks):
+    return [l[i:i+numchunks] for i in range(0, len(l), numchunks)]
+
+def chunk_array(a, numchunks):
+    """
+    Split numpy array into list of numchunks by trailing dimension.
+    """
+    dims = a.shape
+    return [a[...,i:i+numchunks] for i in range(0, dims[-1], numchunks) ]
+
 def unzipDocs(docs):
     wordids = [ids for (ids,cts) in docs]
     wordcts = [cts for (ids,cts) in docs]
     return (wordids,wordcts)
-
 
 def dirichlet_expectation(alpha):
     """
@@ -64,7 +84,7 @@ def unzipDocsShuffle(docs, labels):
     """
     D = len(docs)  # number of documents
     wordids = list()  # placeholder for output
-    labels_new = n.zeros( labels.shape )
+    labels_new = n.zeros( labels.shape, dtype='int' )
 
     for d in range(0, D):
         (ids, cts) = docs[d]
@@ -174,26 +194,26 @@ def show_bars_topics(lam, W, K):
     plt.subplots_adjust(wspace=0.05, hspace=0.05)
     return (fig_top, axs_top)
 
-def tv_error(phi_true, phi_est):
+def tv_error(phi_ref, phi_est):
     """
     Compute total variation error and account for label switching
     """
-    tmp1, tmp2, tv = align_topics(phi_true, phi_est)
+    tmp1, tmp2, tv = align_topics(phi_ref, phi_est)
     return tv
 
-def align_topics(phi_true, phi):
+def align_topics(phi_ref, phi):
     """
     Solve for optimal ordering of topics by minimizing total variation
     """
-    K, W = phi_true.shape
+    K, W = phi_ref.shape
 
     # compute costs
     cost = n.zeros((K,K))
     for k1 in range(K):
-        top_true = phi_true[k1,:]
+        top_ref = phi_ref[k1,:]
         for k2 in range(K):
             top = phi[k2,:]
-            cost[k1,k2] = 1/2 * n.sum( n.abs( top - top_true ) )
+            cost[k1,k2] = 1/2 * n.sum( n.abs( top - top_ref ) )
 
     # do matching
     row, col = linear_sum_assignment(cost)
@@ -215,7 +235,7 @@ def dirichlet_logpdf(X, a):
       X: d x n data matrix, each column sums to one (sum(X,1)==ones(1,n) && X>=0)
       a: d x k parameter of Dirichlet
     Output:
-      y: k x n probability density in logrithm scale y=log p(x)
+      y: n x k probability density in logrithm scale y=log p(x)
     Adapted from Mo Chen (sth4nth@gmail.com)
     """
     if a.ndim == 1:
@@ -223,4 +243,39 @@ def dirichlet_logpdf(X, a):
     c = gammaln(n.sum(a,axis=0))-n.sum(gammaln(a),axis=0) # k-vec or scalar
     g = n.dot((a.T-1), n.log(X)) # k x n
     y = g + c[:,n.newaxis] # k x n
-    return y
+    return y.T # n x k
+
+def write_vocab(resdir, name, V):
+    fname = resdir + name + '_vocab.dat'
+    f = open(fname, 'w')
+    for v in range(V):
+        f.write('word_' + repr(v) + '\n')
+    f.close()
+    print('Saved vocab: %s' % fname)
+
+def write_data(resdir, name, wordcount, labels):
+    V, D = n.shape( wordcount )
+    Nd = n.shape( labels )
+    Nd = Nd[0]
+
+    # write words
+    fname_words = resdir + name + '_train.dat'
+    f = open(fname_words, 'w')
+    for d in range(D):
+        f.write( "%d" % n.sum( wordcount[:,d] ) )
+        for w in range(V):
+            if wordcount[w,d]>0:
+                f.write( " %d:%d" % (w, wordcount[w,d]) )
+        f.write('\n')
+    f.close()
+    print('Saved words: %s' % fname_words)
+
+    # write labels
+    fname_labels = resdir + name + '_labels.dat'
+    f = open(fname_labels, 'w')
+    for d in range(D):
+        for i in range(Nd):
+            f.write("%d " % labels[i,d])
+        f.write('\n')
+    f.close()
+    print('Saved labels: %s' % fname_labels)

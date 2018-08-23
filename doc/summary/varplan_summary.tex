@@ -3,102 +3,535 @@
 \include{packages}
 \include{macros}
 
+% if you need to pass options to natbib, use, e.g.:
+% \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading nips_2018
 
-%% DOCUMENT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ready for submission
+\usepackage[preprint]{nips_2018}
+
+% to compile a preprint version, e.g., for submission to arXiv, add
+% add the [preprint] option:
+% \usepackage[preprint]{nips_2018}
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+% \usepackage[final]{nips_2018}
+
+% to avoid loading the natbib package, add option nonatbib:
+% \usepackage[nonatbib]{nips_2018}
+
+%% \usepackage[utf8]{inputenc} % allow utf-8 input
+%% \usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+%% \usepackage{hyperref}       % hyperlinks
+%% \usepackage{url}            % simple URL typesetting
+%% \usepackage{booktabs}       % professional-quality tables
+%% \usepackage{amsfonts}       % blackboard math symbols
+%% \usepackage{nicefrac}       % compact symbols for 1/2, etc.
+%% \usepackage{microtype}      % microtypography
+
+\title{Variational Information Planning}
+
+% The \author macro works with any number of authors. There are two
+% commands used to separate the names and addresses of multiple
+% authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to
+% break the lines. Using \AND forces a line break at that point. So,
+% if LaTeX puts 3 of 4 authors names on the first line, and the last
+% on the second line, try using \AND instead of \And before the third
+% author name.
+
+\author{
+  Jason Pacheco
+}
+
 \begin{document}
-
-%% TITLE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\title{Variational Information Planning Notes}
-\author{Jason Pacheco}
 \maketitle
 
-\section{Information Theoretic Planning}
 
-Consider a model of latent variables $x$ and conditionally
-independent observations $\Ycal_T = \{y_1,\ldots,y_T\}$.  At each time
-$t$ a discrete \emph{action} $a_t \in \{1,\ldots,A\}$ parameterizes
-the likelihood, denoted \mbox{$p_{a_t}(y_t \mid x)$}.  Given
-observations $\Ycal_T$ and actions $\actionset_T = \{a_1,\ldots,a_T\}$
-the posterior is:
-\begin{equation}\label{eq:joint}
-  p(x\mid \Ycal_T; \actionset_T) \propto p(x) \prod_{t=1}^T p_{a_t}(y_t \mid x)
-\end{equation}
-The choice of conditionally independent observations in the joint is
-for simplification.  Our approach is easily extended to the case where
-nuisance variables must be integrated out, as shown in the labeled LDA
-example of Sec.~\ref{sec:llda}.  Given the posterior at stage $t-1$
-information thoretic planning selects an action to maximize the
-posterior mutual information (MI):
-%% Using uppercase letters $Y$
-%% to denote a random variables and lowercase $y$ to denote their
-%% realization, we have the posterior MI:
-%% \begin{align}\label{eq:mi_integral}
-%% a_t^{*} &= \argmax{a_t\in\actionset} \;I(X; Y_t | \Ycal_{t-1}; a_t ) \\  
-%%   &=  \int p_{a_t}( x, y_t  |  \Ycal_{t-1} ) \log \frac{p_{a_t}(y_t | x)  }
-%%     {p_{a_t}( y_t | \Ycal_{t-1} )} \deriv x \deriv y_t. \notag
-%% \end{align}
-\begin{align}\label{eq:mi_integral}
-  a_t^{*} &= \argmax{a} \;I_a(X; Y_t \mid \Ycal_{t-1} ) \\
-  &= \argmax{a} \;H(X \mid \Ycal_{t-1} ) - H_a(X \mid Y_t, \Ycal_{t-1}) \notag
-\end{align}
-where $H_a( \cdot )$ denotes differential entropy under the
-hypothesized action $a$.  Under this model the marginal entropy
-$H(X\mid \Ycal)$ summarizes past observations and is thus invariant to
-the choice of action at time $t$.  Having chosen action $a^{*}_t$ the
-system draws a new observation from the corresponding likelihood: $y_t
-\sim p_{a^{*}_t}(\cdot \mid x)$.  The posterior is then updated and
-the process is repeated.  Note that this procedure can be interpreted
-as a general case of Bayesian sequential experiment design.
+\section{Variational Bound on Mutual Information}\label{sec:varinf_bound}
+% Calculation of MI~\eqref{eq:mi_integral} is complicated by the
+% posterior expectations required to calculate entropy.  
 
-
-\section{Variational Information Planning}
-
-Calculation of MI~\eqref{eq:mi_integral} is complicated by the
-posterior expectations required to calculate entropy.  In this section
-we show a variational lower bound on MI that is maximized through
-moment-matching.  We conclude with a brief description of a fully
-variational inference and planning algorithm.
-
-\subsection{Variational Information Bound}
-
-For any valid distribution $q\in\Qcal$ we have the following lower
-bound:
+For any PDF $q\in\Qcal$ we have the following lower bound on mutual
+information, as shown by~\cite{agakov2004algorithm}:
 \begin{equation}\label{eq:varmi}
-  I(X;Y_t \mid \Ycal_{t-1} ) \geq H(X \mid \Ycal_{t-1}) - H_p( q(X\mid
-  Y_t) ) 
-  % &= H(X \mid \Ycal_{t-1}) + \big\langle\, \log q(X \mid Y_t) \,\big\rangle_{p(x,y_t \mid
-  %   \Ycal_{t-1})}
+  I(X;Y) \geq H(X) - H_p( q(X\mid Y) ) \equiv I_q(X;Y)
 \end{equation}
-where the final term is the cross-entropy: $H_p(q(x\mid y)) =\langle -
-\log q(x\mid y) \rangle_{p(x,y)}$.  The bound is a result of the
-nonnegativity of Kullback-Leibler divergence since $KL(p\|q) \geq 0$,
-then $H(p) \geq H_p(q)$ and is tight when $q(X \mid Y_t)$ equals the
-posterior $p(X \mid Y_t, \Ycal_{t-1})$.  When $q\in\Qcal$ is an
-exponential family distribution the tightest bound is achieved via
-moment-matching.  To see this we rewrite bound~\eqref{eq:varmi} as an
-equivalent constrained maximization over natural parameters:
-\begin{equation}\label{eq:constrained_varmi}
-  \max_q H(x) + H_p( q(y) ) - H_p(
-  q(x,y) ) \;\;\;\text{such that}\;\;\; q(y) = \int q(x,y) dx
-\end{equation}
-For brevity we have dropped explicit conditioning on the observation
-set $\Ycal$ and time index subscripts $t$.  The marginalization
-constraint ensures $q(x \mid y)$ is a valid conditional distribution.
-Rearranging the objective we have the equivalent minimization:
-\begin{equation}\label{eq:moment_match}
-  q^{*} = \argmin{q(x,y)} \KL( p(x,y) \| q(x,y) ) - \argmin{q(y)} \KL(p(y) \| q(y))
-\end{equation}
-The above minimization is \emph{equivalent} in the sense that $q^{*}$
-is the maximizer of~\eqref{eq:constrained_varmi} and the minimizer
-of~\eqref{eq:moment_match}, though their objective functions differ.
-However, the moment-matching property of exponential families ensures
-that~\eqref{eq:moment_match} is a convex objective whose unique
-solution corresponds to matching the expected sufficient statistics of
-$q$ to the corresponding moments of $p$.  We choose $q(x,y)$ so that
-$q(y) = \int q(x,y) dx$ remains in the exponential family.  This
-choice of $q(x,y)$ ensures that the solution to the unconstrained
-objective satisfies the marginalization constraints.
+where the final term is the cross-entropy: $H_p(q(x\mid y)) =
+\E_{p(X,Y)}[ - \log q(X\mid Y)]$.  The bound arises from nonnegativity
+of the Kullback-Leibler divergence since, $KL(p\|q) = H_p(q) - H(p)
+\geq 0$ which implies that $H(p) \geq H_p(q)$.  The bound is tight
+when $q(X\mid Y)$ and $p(X\mid Y)$ are equivalent in distribution.
+Given this bound we now turn to optimizing $I_q(X;Y)$ for a specific
+class of distributions $q\in\Qcal$.
 
+\subsection{Optimization for Curved Exponential Families}
+Let the set of feasible distributions $\Qcal$ be in the curved
+exponential family with natural parameters $\theta(y)$.  The PDF is
+given by,
+\begin{gather}
+  q(X \mid Y = y; \theta) = \exp\left( \theta(y)^T \phi(X) -
+    A(\theta(y)) \right) \\
+  A(\theta(y)) = \log \int_{\Xcal \times \Ycal} \!\!\!\!\!\exp\left( \theta(y)^T \phi(x) \right)
+dx dy
+\end{gather}
+where $\phi(\cdot)$ are sufficient statistics and $A(\theta(y))$ is
+the log-partition function.  Optimizing the variational lower
+bound~\eqref{eq:varmi} corresponds to minimizing the bound gap,
+\begin{align}\label{eq:dual}
+  \theta^* &= \argmin_\theta I(X;Y) - I_{q^{\theta}}(X;Y) = \E_{p_Y}\left[ KL(
+  p_{X\mid y} \| q^\theta_{X\mid y} ) \mid Y=y \right]
+\end{align}
+which takes on the form of an expected Kullback-Leibler divergence.
+For brevity we have introduced the shorthand notation
+$q^{\theta}_{X\mid Y} \equiv q(X\mid Y; \theta)$ and similarly for
+$p_{X\mid Y}$.  For any fixed realization $Y=y$, minimization of the KL
+divergence is convex and corresponds to matching expected
+sufficient statistics (moments) of the conditional distributions:
+\begin{equation}\label{eq:moment_match_cond}
+  \theta^{*} \Leftrightarrow \E_{q^{\theta^{*}}_{X\mid y}}[ \phi(X) ]
+  = \E_{p_{X\mid y}}[\phi(X)].
+\end{equation}
+Optimization of~\eqref{eq:dual} is convex since $\E_{p_Y}[ KL(
+  p_{X\mid y} \| q_{X\mid y} ) ]$ is a
+convex combination of convex functions, which itself convex.
+Stationary points correspond to the following,
+\begin{equation}\label{eq:stationary_point}
+  \theta^{*} \Leftrightarrow  \E_{p_Y}\left[ \E_{q^{\theta^{*}}_{X\mid
+        y}}[ \phi(X) \mid Y=y ] \right] = \E_{p_Y}\left[ \E_{p_{X\mid y}}[\phi(X) \mid Y=y ] \right] .
+\end{equation}
+Both moment-matching conditions~\eqref{eq:moment_match_cond}
+and~\eqref{eq:stationary_point} require moments of the posterior
+distribution $p_{X\mid y}$, which are not tractable in general.
+However, the latter is a weaker condition in that moments must match
+\emph{in expectation} w.r.t.~the marginal distribution $p(Y)$.
+Intuitively, this means that \emph{on average} our variational
+approximation $q_{X\mid Y}$ must match moments, as opposed to matching
+moments for all realizations of $Y=y$.
+
+% \subsection{Optimization and Evaluating the Lower Bound}\label{sec:eval_vibound}
+% The objective function \EQN\eqref{eq:dual} and corresponding
+% stationary point conditions \EQN\eqref{eq:stationary_point} provide a
+% mechanism for optimizing the variational lower bound
+% \EQN\eqref{eq:varmi}.  For planning purposes discussed in
+% \SEC\ref{sec:sequential}, however, it will be necessary to evaluate
+% the optimal lower bound.  To begin, assume parameters $\theta^{*}$
+% correspond to a stationary point and,
+% \[
+%   \E_{p_Y}\left[ \E_{q^{\theta^{*}}_{X\mid
+%       y}}[ \phi(X) \mid Y=y ] \right] = \E_{p_Y}\left[ \E_{p_{X\mid y}}[\phi(X) \mid Y=y ] \right].
+% \]
+% We then have that the MI lower bound takes the following form,
+% \begin{equation}\label{eq:varmi_eval}
+%   I_q(X;Y) = H_p(X) - \E_{p_Y}\left[ H_{q^{\theta^{*}}}(X \mid Y=y) \right].
+% \end{equation}
+% Namely, the conditional cross-entropy is the expected entropy of
+% $q(\cdot)$, where expectation is w.r.t.~the marginal $p(Y)$.  This
+% can be shown with a little algebra,
+% % \begin{align}
+% %   H_p(q_{X\mid y}) &= - \theta^T \E_p\left[ \phi(X)
+% % \end{align}
+
+
+\subsection{Optimizing Parameters of the Mean Function}\label{sec:mean_func}
+The stationary point conditions~\eqref{eq:stationary_point} relate
+optimal natural parameters to conditions on the moments of $q(\cdot)$.
+Since exponential families are fully specified by their moments, a
+more direct approach is to explicitly represent the moments as a
+parametric functions $m^{\varphi}(y)$ with parameters $\varphi$.  In
+addition, there exists an invertible mapping $g(m^\varphi(y))$
+relating moments to corresponding natural parameters,
+\begin{equation}
+  m^{\varphi}(y) = \E_{q_{X\mid y}}[ \phi(X) ], \quad \theta(y) = g(m^\varphi(y))
+\end{equation}
+Using the generalized chain rule we derive a compact representation of
+the stationary conditions for the parameters $\varphi$ of the mean
+function,
+\begin{equation}\label{eq:stationary_mean_params}
+  \varphi^{*} \Leftrightarrow \E_{p_Y}\left[ \left( D_\varphi
+    g \right)^T \E_{p_{X\mid y}}[ \phi(X) \mid Y=y ] \right] =
+  \E_{p_Y}\left[ \left( D_\varphi
+    g \right)^T m^{\varphi}(Y) \right]
+\end{equation}
+where $D_\varphi g$ is the Jacobian of $g(\cdot)$ with respect to
+parameters $\varphi$.  More specifically, let $g = (g_1, \ldots,
+g_M)^T$ be a vector-valued link function of length $M$.  Similarly,
+let $\varphi = (\varphi_1, \ldots, \varphi_D)^T$ be a D-vector
+parameterizing the mean function.  Note that, in
+general, the Jacobian will be a function of the random variable $Y$
+and has the form,
+\begin{equation}
+  D_\varphi g = \MATRIX{
+    \frac{\partial g_1}{\partial \varphi_1} & \ldots & \frac{\partial
+      g_1}{\partial \varphi_M} \\
+    \vdots & \ddots & \vdots \\
+    \frac{\partial g_D}{\partial \varphi_1} & \ldots & \frac{\partial
+      g_D}{\partial \varphi_M}
+    }.
+\end{equation}
+The stationary point conditions~\eqref{eq:stationary_mean_params} then
+define a system of $M$ equations with $M$ unknowns.  If $m^\varphi$ is
+(strictly) convex in $\varphi$ then optimization of the lower bound
+remains (strictly) convex.
+
+
+\label{sec:sequential}
+\section{Sequential Variational Information Planning}
+\SEC\ref{sec:varinf_bound} discusses optimizing the MI bound for a
+fixed distribution $p$. In this section we consider an algorithm for
+closed-loop greedy planning which alternately maximizes the MI bound
+and updates the posterior with new observations.  A variational
+approach is proposed for, both, the inference and planning stages.  We
+show that this construction simplifies calculation of general
+fixed-point conditions~\eqref{eq:stationary_point} and facilitates evaluation of the
+lower bound~\eqref{eq:varmi}.
+
+\subsection{Variational Planning}
+
+Consider a model of latent variables $x$ and conditionally independent
+observations $\Ycal_t = \{y_1,\ldots,y_t\}$.  At each time $t$ a
+discrete \emph{action} $a_t \in \{1,\ldots,A\}$ parameterizes the
+likelihood, denoted \mbox{$p_{a_t}(y_t \mid x)$}.  Given observations
+$\Ycal_t$ and actions $\actionset_t = \{a_1,\ldots,a_t\}$ the
+posterior is:
+\begin{equation}\label{eq:joint}
+  p(x\mid \Ycal_t; \actionset_t) \propto p(x) \prod_{t=1}^T p_{a_t}(y_t \mid x)
+\end{equation}
+At time $t$ we observe new data $y_t$ and update the variational
+approximation of the posterior distribution by optimizing,
+\begin{equation}\label{eq:local_approx}
+  \omega_t^* = \argmin_{\omega} KL\left( \omega(X) \| p(X, \Ycal) \right),
+\end{equation}
+and $\omega_t(X) \approx p(X\mid \Ycal_t; \actionset_t)$ is chosen to be a
+distribution in the exponential family.  
+
+Ideally, planning at time $t+1$ would maximize MI w.r.t.~the
+distribution $p(X,Y_{t+1} \mid \Ycal_t)$.  However, because we do not
+have access to this distribution we form a local approximation,
+\[
+  \hat{p}_{t+1}(X,Y_{t+1}) \equiv \omega_t(X) p(Y_{t+1} \mid X)
+\]
+where we have dropped explicit conditioning on the action choice
+$a_{t+1}$ for brevity.  Variational planning then optimizes the
+following lower bound on approximate MI,
+\begin{equation}\label{eq:varmi_approx}
+  \max_a I_{\hat{p}}(X;Y_{t+1} \mid \Ycal_t) \geq \max_a \max_q
+  H_{\hat{p}}(X) - H_{\hat{p}}\left( q(X \mid Y_{t+1}) \right)
+\end{equation}
+using the approach described in \SEC\ref{sec:varinf_bound}.
+
+
+\subsection{Optimizing and Evaluating the Variational MI Bound}
+
+Unfortunately, optimizing the variational bound requires expectations
+under the true model.  In particular, zero-gradient
+conditions~\eqref{eq:stationary_point} require computing expectations
+under the marginals $p(x)$ and $p(y)$.  Our local
+approximation~\eqref{eq:local_approx}, which is based on the
+variational posterior approximation, simplifies computation.  After
+some algebra we have the zero-gradient conditions:
+\begin{equation}\label{eq:local_zero_grad}
+  \E_{\omega}[ \phi(X) ] = \E_{\hat{p}_Y}[ \E_{q_{X\mid y}}[ \phi(X)
+      \mid Y=y ] ].
+\end{equation}
+By the law of total expectation the left hand side reduces to
+expectations w.r.t.~our current variational posterior, which is
+assumed tractable.  The remaining expectation under the marginal
+$\hat{p}_y = \int \hat{p}_{xy} dx$ is not closed-form in general.
+However, we have the Monte carlo estimate,
+\[
+  \E_{\hat{p}_Y}[ \E_{q_{X\mid y}}[ \phi(X) \mid Y=y ] ] \approx
+    \frac{1}{N} \sum_{i=1}^N \E_{q{X\mid y^i}}[ \phi(X) | Y = y^i],
+    \qquad \{x^i,y^i\}_{i=1}^N \sim \omega(x)
+    p(y\mid x)
+\]
+This is efficient to calculate since the variational distribution
+$\omega(x)$ is in the exponential family.  Moreover, the likelihood
+$p(y \mid x)$ is often easy to sample in many models, which we assume
+is the case here.
+
+While optimization of the bound produces a maximizing set of parameters
+$\theta^{*}$, planning requires evaluation of the
+bound~\eqref{eq:varmi} at these parameters.  This too is intractable
+and can be approximated using the same set of samples as:
+\begin{equation}
+  H_{\hat{p}}(X) - H_{\hat{p}}(q) \approx H_{\hat{p}}(X) + \frac{1}{N} \sum_{i=1}^N \log q(x^i \mid y^i).
+\end{equation}
+The marginal entropy $H_{\hat{p}}(X) = H_{\omega}(X)$ is tractable,
+since it is the entropy of an exponential family marginal.  The
+marginal entropy is also constant in the decision variable $a_{t+1}$
+and so does not need to be computed.
+
+Given the need for Monte carlo estimates an obvious alternative would
+be to directly estimate the MI over the local approximation
+$\hat{p}(x,y)$.  Such an approach requires the use of nested Monte
+carlo estimators, and as a result has higher sample complexity and
+potentially large estimator bias.  In addition, for some models our
+approximations enable both closed-form optimization and bound
+evaluation, for example when the marginal $\hat{p}_y = \int
+\hat{p}_{xy} dx$ is in the exponential family.
+
+
+\section{Constrained Optimization of the MI Bound}
+
+An alternative approach to optimizing the MI lower
+bound~\eqref{eq:varmi} is to formulate it as a constrained
+optimization.  This section describes some preliminary work on the
+constrained optimization approach.  First, we define exponential
+family joint and marginal distributions:
+\begin{gather}
+  q_{XY} \equiv q(X,Y) = \exp\left\{ \eta^T \phi(X,Y) - A(\eta)
+  \right\} \\
+  q_Y \equiv q(Y) = \exp\left\{ \beta^T \phi(Y) - A(\beta) \right\}.
+\end{gather}
+We then minimize bound gap subject to the marginal consistency
+constraint $q_y = \int q_{xy} dx$.  For exponential families marginal
+consistency is equivalent to a constraint on the moment parameters,
+which we will exploit below.  The resulting equality constrained
+problem is over parameters $\eta$ and $\beta$ of the joint and
+marginal, respectively:
+\begin{align}\label{eq:constrained_mibound}
+  &\min_{\eta, \beta} \; f(\eta, \beta) \equiv KL( p_{XY} \| q_{XY} ) - KL(
+    p_Y \| q_Y ) \notag \\
+  &\;\text{s.t.} \; \E_{q_Y}[ \phi(Y) ] =
+  \E_{q_{XY}}[ \phi(Y) ]
+\end{align}
+This formulation has a number of nice properties which may simplify
+optimization and evaluation of the lower bound.
+
+\subsection{Convexity Properties}
+The constrained problem~\eqref{eq:constrained_mibound} is equivalent
+to the unconstrained one~\eqref{eq:dual} as there exists a function
+$\psi(\eta) = \beta$ mapping joint parameters to marginal parameters
+satisfying the constraints,
+\[
+  \int q_{xy}^{\eta} dx = q_y^{\psi(\eta)}.
+\]
+Using the mapping $\psi(\cdot)$ we can eliminate equality constraints
+and further define \mbox{$q^\eta_{X\mid Y} \equiv q^\eta_{XY} \div
+  q_Y^{\psi(\eta)}$}.  We now have the following unconstrained
+problem:
+\begin{equation}
+  \min_{\eta} \; F(\eta) \equiv \E_{p_Y}\left[ KL\left( \,p_{X\mid y}\,
+      \big\| \,q_{X\mid y}^\eta\, \right) \mid Y=y \right].
+\end{equation}
+The above is an instance of the original problem~\eqref{eq:dual} for
+the particular curved exponential family induced by our choice of
+joint and marginal distributions and the mapping $\psi(\cdot)$.
+Moreover, the two problems are equivalent in the sense that for any
+optimizer $(\eta^*,\beta^*)$ of $f(\eta,\beta)$ we have that $\eta^*$
+is an optimizer of $F(\eta)$.  The converse is also true: for any
+optimum $\eta^*$ of $F$ there is at least one $(\eta^*,\beta^*)$
+optimizing $f$ such that $\psi(\eta^*) = \beta^*$.  
+
+The constrained problem is non-convex off the constraints, since the
+objective is not a convex function.  The Hessian matrix of
+$f(\eta,\beta)$ is given by:
+\begin{gather}
+  \nabla^2 f = \MATRIX{
+    \nabla^2_{\eta \eta} f & 0 \\
+    0 & \nabla^2_{\beta \beta} f
+  } \\
+  \nabla^2_{\eta \eta} f = \textrm{cov}_{xy}( \phi(x,y) ), \qquad
+  \nabla^2_{\beta \beta} f = - \textrm{cov}_y( \phi(y) ).
+\end{gather}
+So the objective function is convex in joint parameters and
+\emph{concave} in marginal ones.  However, we have established
+equivalence to $F(\eta)$ when the marginalization constraints are
+satisfied.  Because $F$ is convex we have that $f$ is 
+\emph{convex on
+  the constraints}. This convexity is not strict since there may be
+more than one choice of $(\eta,\beta)$ mapping to the same conditional
+distribution.  
+
+\subsection{Optimality Conditions}
+To establish optimality conditions let $h(\eta,\beta) = \E_{q_Y}[
+\phi(Y) ] - \E_{q_{XY}}[ \phi(Y) ]$ be the vector of constraints.  A
+point is feasible iff $h(\eta,\beta)=0$.  The Lagrange multiplier
+theorem states that if $(\eta^*,\beta^*)$ is a feasible local minimum
+then there exists a vector $\lambda$ such that:
+\begin{gather}
+  \nabla f(\eta^*,\beta^*) + \lambda^T \nabla h(\eta^*, \beta^*) = 0 \label{eq:necessary}\\
+  y^T \left( \nabla^2 f(\eta^*,\beta^*) + \lambda^T \nabla^2
+    h(\eta^*,\beta^* \right) y > 0 \label{eq:sufficient}
+\end{gather}
+for all $y \in V(\eta^*,\beta^*)$ where $V(\cdot)$ is the set of
+feasible vectors (variations).  While details of the above conditions
+are being worked out an interesting property arises from
+differentiating the objective $f(\eta,\beta)$.  In particular, setting
+$\nabla f(\eta,\beta)=0$ yields the following moment-matching
+conditions:
+\begin{gather}
+  \E_p[ \phi(X,Y) ] = \E_{q^{\eta}_{XY}}[ \phi(X,Y) ] \\
+  \E_p[ \phi(Y) ] = \E_{q^{\beta}_Y}[ \phi(Y) ].
+\end{gather}
+Moreover, the marginalization condition is satisfied making the above
+solution a feasible point.  In addition, distributions $q_{XY}$ and
+$q_Y$ which satisfy the above equations yield a simple way to evaluate
+the variational lower bound since,
+\[
+  H_p(q_{XY}) = \E_p[ - \eta^T \phi + A(\eta) ] = - \eta^T
+  \E_q[\phi] + A(\eta) = H_{q_{XY}}(q_{XY}).
+\]
+However, it is unclear whether such points corresponds to a local
+optima.  We can determine this by evaluating
+\EQNS\eqref{eq:necessary}~and~\eqref{eq:sufficient} at the
+corresponding point and solving for Lagrange multipliers.  I am
+currently looking into this.
+
+% There exists a function $\psi(\eta,\beta) = \theta(Y)$ mapping
+% parameters of the joint $q_{XY}$ and marginal $q_Y$ to the
+% corresponding conditional $q_{X\mid Y}$.  The constrained
+% problem~\eqref{eq:constrained_mibound} is then equivalent to the
+% unconstrained problem: $
+
+% Parameters $(\eta^{*},\beta^{*})$ minimizing the constrained
+% problem~\eqref{eq:constrained_mibound} map to the minimizer
+% $\theta^{*}(Y) = \psi(\eta^{*},\beta^{*})$ of the unconstrained
+% problem~\eqref{eq:dual}.  
+
+
+% Recall the unconstrained problem~\eqref{eq:dual} is given by,
+% \begin{equation}
+%   \min_\theta F(\theta) \equiv \E_{p_Y}\left[ KL(
+%     p_{X\mid y} \| q^\theta_{X\mid y} ) \mid Y=y \right]
+% \end{equation}
+
+
+%% \subsection{Example: Affine Gaussian Approximation}
+%% Let us choose $q(\cdot)$ to be Gaussian, with a mean
+%% function that is an affine transformation of $Y$,
+%% \begin{equation}
+%%   q(X\mid Y=y) = N(Ay, \Sigma)
+%% \end{equation}
+%% The link function maps moments to natural parameters $\Lambda =
+%% \Sigma^{-1}$ and $\eta = \Sigma^{-1}( Ay )$.  Our objective, in terms
+%% of natural parameters, is given by:
+%% \begin{equation}\label{eq:gauss_crossent}
+%%   J(\eta, \Sigma) = \left\langle - \frac{1}{2} \log |\Lambda| + \frac{1}{2}
+%%   x^T \Lambda x - x^T \eta + \frac{1}{2} \eta^T \Lambda^{-1} \eta \right\rangle_{p_{XY}}
+%% \end{equation}
+%% Setting the gradient w.r.t.~the natural location parameter
+%% $\nabla_\eta J = 0$ to zero yields the moment matching condition,
+%% \begin{equation}\label{eq:grad_eta}
+%%   \langle x \rangle_{p_{XY}} = \langle Ay \rangle_{p_{XY}} = \langle
+%%   \langle x \mid y \rangle_{q_{X\mid y}} \rangle_{p_{Y}},
+%% \end{equation}
+%% where we have used the relation $Ay = \langle x \mid y
+%% \rangle_{q_{X\mid y}}$.  The above is a special case of the general
+%% statement~\EQN\eqref{eq:moment_match_cond} and so could be arrived at
+%% directly without computing gradients.  Computing the gradient
+%% w.r.t.~the covariance $\Sigma$, and setting it to zero, yields,
+%% \begin{equation}
+%%   \Sigma = \langle xx^T \rangle + 2\langle Ayx^T \rangle - \langle
+%%   Ayy^TA \rangle.
+%% \end{equation}
+%% Again, using the relation that $Ay$ is the conditional mean of our
+%% variational approximation we have,
+%% \begin{equation}
+%%   \Sigma = \langle xx^T \rangle + 2\langle \E_{q_{X\mid y}}[x \mid y]
+%%   x^T \rangle_{p_Y} - \langle \E_{q_{X\mid y}}[x \mid y] \E_{q_{X\mid
+%%       y}}[x^T \mid y] \rangle_{p_Y}.
+%% \end{equation}
+%% Finally, substituting the moment-matching condition
+%% \EQN\eqref{eq:grad_eta} we have that $\Sigma = \langle \text{cov}_p(X
+%% \mid y) \rangle_{p_Y}$.  This is consistent with the general
+%% stationary conditions \EQN\eqref{eq:moment_match_cond} since the
+%% Gaussian covariance is not a function of the observation $y$.
+%% Solving for $A$ is similarly consistent with the general case in \SEC\ref{sec:mean_func}.
+
+
+%% Given the posterior at stage $t-1$ information thoretic planning
+%% selects an action to maximize the posterior mutual information (MI):
+%% %% Using uppercase letters $Y$
+%% %% to denote a random variables and lowercase $y$ to denote their
+%% %% realization, we have the posterior MI:
+%% %% \begin{align}\label{eq:mi_integral}
+%% %% a_t^{*} &= \argmax{a_t\in\actionset} \;I(X; Y_t | \Ycal_{t-1}; a_t ) \\  
+%% %%   &=  \int p_{a_t}( x, y_t  |  \Ycal_{t-1} ) \log \frac{p_{a_t}(y_t | x)  }
+%% %%     {p_{a_t}( y_t | \Ycal_{t-1} )} \deriv x \deriv y_t. \notag
+%% %% \end{align}
+%% \begin{equation}\label{eq:mi_integral}
+%%   a_t^{*} = \argmax_a \;I_a(X; Y_t \mid \Ycal_{t-1} ) = H(X \mid \Ycal_{t-1} ) - H_a(X \mid Y_t, \Ycal_{t-1})
+%% \end{equation}
+%% where $H_a( \cdot )$ denotes differential entropy under the
+%% hypothesized action $a$.  Under this model, where observations are
+%% conditionally independent, the marginal entropy $H(X\mid \Ycal)$
+%% summarizes past observations and is thus invariant to the choice of
+%% action at time $t$.  
+
+% Having chosen action $a^{*}_t$ the system draws a
+% new observation from the corresponding likelihood: $y_t \sim
+% p_{a^{*}_t}(\cdot \mid x)$.  The posterior is then updated and the
+% process is repeated.  Note that this procedure can be interpreted as a
+% general case of Bayesian sequential experiment design.
+
+
+  
+%%
+%% NOT SURE I NEED THIS ANYMORE...
+%%
+% Since the exponential family is closed under conditioning we have
+% that the conditional distribution $q_{X\mid Y}^\theta$ shares the same
+% parameters and sufficient statistics as the joint,
+% \begin{equation}
+%   q(X \mid Y=y; \theta)= \exp\left( \theta^T \phi(X,y) - A(\theta \mid
+%     y) \right), \quad A(\theta \mid y) = \log \int_\Xcal \exp\left(
+%     \theta^T \phi(x,y) \right) dx.
+% \end{equation}
+% The gradient and Hessian matrix of the bound gap is given by,
+% \begin{align}
+%   \nabla J(\theta) &= \E_{p_Y} \left[ \E_{q_{X\mid Y}^\theta} [
+%   \phi(X,y) \mid Y=y ] \right] - \E_{p_{XY}}[ \phi(X,Y) ] \\
+%   H J(\theta) &= \E_{p_Y}\left[ \text{cov}_{q_{X\mid Y}^\theta}\left( \phi(X,y)
+%   \mid Y=y \right) \right]
+% \end{align}
+% The optimization~\eqref{eq:dual} is a convex minimization, since the
+% Hessian is a convex combination of covariance matrices, each of which
+% is PSD.  Setting the gradient to zero we have the following
+% moment-matching conditions characterizing the optimum,
+% \begin{equation}\label{eq:vardual_momentmatch}
+%   \E_{p_{XY}}[ \phi(X,Y) ] = \E_{p_Y} \left[ \E_{q_{X\mid Y}^\theta} [
+%   \phi(X,y) \mid Y=y ] \right].
+% \end{equation}
+% A subtle point worth noting is that the above moment-matching
+% equations are not the standard ones for minimizing conditional KL
+% since~\eqref{eq:dual} is in terms of an unobserved random variable
+% $Y$.  By contrast, the standard moment-matching conditions arise when
+% the KL is conditioned on a particular realization $Y=y$,
+% \[
+%   \E_{p_{X\mid Y}}[ \phi(X,y) \mid Y=y] = \E_{q_{X\mid Y}^\theta}[
+%   \phi(X,y) \mid Y=y],
+% \]
+% which matches moments of the conditional distributions.
+
+
+% We begin by rewriting the bound~\eqref{eq:varmi} as,
+% \begin{equation}\label{eq:constrained_varmi}
+%   \max_q H(x) + H_p\left( \int q(x,y) dx \right) - H_p( q(x,y) ).
+% \end{equation}
+% For brevity we have dropped explicit conditioning on the observation
+% set $\Ycal$ and time index subscripts $t$.  Rearranging the objective
+% we have the equivalent minimization,
+% \begin{equation}\label{eq:moment_match}
+%   q^{*} = \argmin_{q(x,y)} \KL{p(x,y)}{q(x,y)} - \mathrm{KL}\left(p(y) \Big\| \int q(x,y) dx\right).
+% \end{equation}
+% The above minimization is \emph{equivalent} in the sense that $q^{*}$
+% is the maximizer of~\eqref{eq:constrained_varmi} and the minimizer
+% of~\eqref{eq:moment_match}, though their objective functions differ.
+% However, the moment-matching property of exponential families ensures
+% that~\eqref{eq:moment_match} is a convex objective whose unique
+% solution corresponds to matching the expected sufficient statistics of
+% $q$ to the corresponding moments of $p$.  We choose $q(x,y)$ so that
+% $q(y) = \int q(x,y) dx$ remains in the exponential family.  This
+% choice of $q(x,y)$ ensures that the solution to the unconstrained
+% objective satisfies the marginalization constraints.
+
+
+% The combination of
+% Eq.~\eqref{eq:varmi_bound} with exponential family approximations was
+% extensively studied by 
 
 %% \begin{align}
 %%   q(x,y) &= \exp\{ \eta^T \phi(x,y) - A(\eta) \} \\
@@ -106,139 +539,99 @@ objective satisfies the marginalization constraints.
 %% \end{align}
 
 
-\subsection{Algorithm Description}
-
-Suppose that at time $t-1$ we have a posterior approximation $q(x)
-\approx p(x \mid \Ycal_{t-1})$.  For each hypothesized action $a_t \in
-\Acal$ we construct a local approximation of the joint distribution.
-The local approximation consists of the variational posterior, which
-summarizes previous observations, and the predicted future observation
-conditioned on the hypothesized action:
-\begin{equation}
-  \hat{p}_{a_t}(x,y_t \mid \Ycal_{t-1}) \propto q(x) p_{a_t}(y_t \mid x)
-\end{equation}
-Our variational planning
-objective maximizes the lower bound~\eqref{eq:varmi} of MI under the
-approximation $\hat{p}$,
-\begin{equation}
-  \max_{a\in\Acal} I_{\hat{p}_a}(X;Y_t \mid \Ycal_{t-1} ) \geq
-  \max_{a\in\Acal} \max_{q_a\in\Qcal} H_{\hat{p}}(X \mid \Ycal_{t-1}) - H_{\hat{p}_a}(
-  q_a(X\mid Y_t) ).
-\end{equation}
-As was shown in the previous section, the lower bound for each action
-can be found by matching moments of $q_a$ and $\hat{p}$.  This
-procedure of moment-matching to a local approximation is analogous to
-the steps in expectation propagation (EP).  More specifically, the
-local approximation $\hat{p}$ is analogous to the \emph{augmented
-  distribution} in EP.  The model requirement is that expected
-sufficient statistics under $\hat{p}$ can be calculated efficiently.
-Planning requires a total of $\Ocal( |\Acal| )$ moment-matching
-operations, which can be done in parallel.
 
 
+% \section{Non-Exchangeable Models}
+% \subsection{Expectation Propagation}
+% \begin{figure*}[!t]
+%   \centering
+%   \hspace{-3mm}
+%   \includegraphics[width=0.9\textwidth]{ep.pdf}
+%   \vspace{-3mm}
+%   \caption{\small Expectation propagation updates for pairwise
+%     MRFs.}
+%   \label{fig:ep}
+% \end{figure*}
 
-\section{Labeled LDA Example}\label{sec:llda}
+% The message update integral~\eqref{eq:bp_message} constrains BP to
+% discrete and Gaussian MRFs.  Expectation Propagation (EP) applies to a
+% much broader class of
+% models~\cite{minka01uai,heskes_zoeter,wainwright_jordan}, and is made
+% possible by exploiting closure properties of the exponential family
+% (see Sec.~\ref{sec:expfam}).  For a cleaner presentation we assume a
+% pairwise MRF consisting of only pairwise potentials,
+% \begin{equation}\label{eq:epmrf}
+%   p(x) = \frac{1}{Z} \prod_{(s,t) \in \mathcal{E}} \pot_{st}(x_s,x_t).
+% \end{equation}
+% This factorization is w.l.o.g.~since node factors $\pot_s$ can always
+% be absorbed arbitrarily into a neighboring edge potential.
+% Expectation propagation approximates the marginal $p_s(x_s)$ with a
+% density in the exponential family defined to be a product of messages,
+% \begin{equation}\label{eq:epmarg}
+%   \epmarg_s(x_s) = \exp( \langle \theta_s, \phi(x_s) \rangle - \logpart(\theta_s))
+%   \propto \prod_{t \in \Gamma(s)} m_{ts}(x_s)
+% \end{equation}
+% with canonical parameters $\theta_s$, sufficient statistics
+% $\phi(x_s)$ and mean parameters $\mu_s = \E[\phi(x_s)]$.  The
+% messages $m_{ts}(\cdot)$ belong to the \emph{unnormalized} exponential
+% family with parameters $\theta_{ts}$ and a scale factor $\gamma_{ts}$,
+% \begin{equation}\label{eq:epmsg}
+%   m_{ts}(x_s) = \gamma_{ts} \exp( \langle \theta_{ts}, \phi(x_s)
+%   \rangle ).
+% \end{equation}
 
-\begin{figure}[t]
-  \centering
-  \begin{tabular}{ccc}
-    \includegraphics[height=0.14\textheight]{llda_model.png} &
-    \includegraphics[height=0.14\textheight]{BARS_10.png} &
-    \includegraphics[height=0.14\textheight]{BARS_docs.png} \\
-    {\small \textbf{Model}} & {\small \textbf{``Bars'' Topics}} & {\small \textbf{Sample Documents}}
-  \end{tabular}
-  \caption{\small \textbf{Labeled LDA} The graphical model of LLDA
-    denotes semi-supervised annotation $y_{dn}$ with a dashed line.
-    Each word $n$ of document $d$ is assigned an annotation and at
-    each planning stage we select among the remaining set of
-    annotations.  We use synthetic ``bars'' topics as introduced in
-    Griffiths and Steyvers.}
-  \label{fig:llda}
-\end{figure}
+% To update the marginal approximation $\epmarg_s(x_s)$ we first choose
+% a factor $\pot_{st}$ and remove the corresponding messages from
+% marginals over nodes incident to this factor.  The so-called
+% \emph{cavity} is an unnormalized exponential family:
+% \begin{equation}\label{eq:ep_cavity}
+%   \epmarg_s^{\setminus t}(x_s) = \frac{\epmarg_s(x_s)}{m_{ts}(x_s)} =
+%   \gamma_s^{\setminus t} \exp( \langle \theta_s^{\setminus t},
+%   \phi(x_s) \rangle).
+% \end{equation}
+% We form the \emph{augmented distribution} by multiplying the true
+% factor $\pot_{st}$ with the corresponding cavity distributions and
+% integrating over $x_t$,
+% \begin{equation}\label{eq:aug_dist}
+%   \hat{p}_{ts}(x_s) = \int \epmarg_s^{\setminus t}(x_s)
+%   \pot_{st}(x_s,x_t) \epmarg_t^{\setminus s}(x_t) dx_t.
+% \end{equation}
+% The augmented distribution~\eqref{eq:aug_dist} is a local
+% approximation to the marginal, but is not necessarily in the
+% exponential family.  The variational approximation is updated by
+% projecting into the exponential family,
+% \begin{equation}\label{eq:klproj}
+%   \epmarg_s^{new}(x_s) = \argmin_q\; \KL{\hat{p}_{ts}(x_s)}{q(x_s)}.
+% \end{equation}
+% Using the moment matching property of the exponential family (see
+% Sec.~\ref{eq:moment_match}) we update the parameters as,
+% \begin{equation}\label{eq:ep_proj}
+%   \mu_s^{new} = \mathbb{E}_{\epmarg_s^{new}}[ \phi(x_s) ] =
+%   \mathbb{E}_{\hat{p}_{ts}}[ \phi(x_s) ].
+% \end{equation}
+% One restriction EP imposes is that moments of the augmented
+% distribution~\eqref{eq:ep_proj} are computable.  If these integrals
+% are not analytic they can be numerically approximated, for example by
+% quadrature methods~\cite{zoeter2005gaussian}.  The associated
+% canonical parameters $\theta_s^{new}$ can be computed
+% from~\eqref{eq:ep_proj} to yield the log-partition
+% $\logpart(\theta_s^{new})$, which fully specifies the exponential
+% family density.  Finally, we update the message from $t$ to $s$ as,
+% \begin{equation}\label{eq:epmsg_update}
+%   m_{ts}(x_s) = \frac{ \epmarg_s^{new}(x_s) }{ \epmarg_s^{\setminus t}(x_s) }.
+% \end{equation}
+% This message update is easily calculated by subtracting canonical
+% parameters, $\theta_{ts} = \theta_s^{new} - \theta_s^{\setminus t}$.
+% The algorithm proceeds iteratively by updating each factor $\pot_{st}$
+% for all $(s,t) \in \mathcal{E}$ in any order.  Convergence is
+% determined when the change in message parameters $\theta_{ts}$ falls
+% below some specified threshold.
 
-Labeled LDA (LLDA), introduced in Flaherty et al. (2005), extends LDA
-to include a semi-supervised label for each word in the corpus.  The
-application considered in Flaherty et al. uses LLDA to infer latent
-groups of genes affected by various drugs.  In that setting the
-annotation label assigns functional categories to individual genes,
-when they are known.  In this way the LLDA model can discover
-interpretable topics.  See Fig.~\ref{fig:llda} for the LLDA graphical
-model and notation we will reference below.
 
-At stage $t-1$ of learning we observe a set of annotations
-$\Ycal_{t-1} = \{ y_{d_1 n_1}, \ldots, y_{d_{t-1} n_{t-1}}\}$, which
-we treat as discrete in this example.  We update our variational
-posterior approximation over $K$ topics $\varphi$ and document-topic
-proportions $\theta$ for $D$ documents:
-\begin{equation}
-  p(\theta, \varphi \mid \Ycal_{t-1}) \approx \prod_{d=1}^D q(\theta_d)
-  \prod_{k=1}^K q(\varphi_k)
-\end{equation}
-During stage $t$ \emph{planning} we select the index $(d,n)$ which
-maximizes MI between topics $\varphi$ and annotation $Y_{dn}$ as in:
-$\max_{d,n} I(Y_{dn}; \varphi \mid \Ycal_{t-1})$.  Unlike the simplef
-model~\eqref{eq:joint}, LLDA involves nuisance variables which must be
-marginalized during the planning stage.  To generalize the algorithm
-we assume an EP-style variational approximation which are product
-distributions consisting of \emph{messages} from each neighbor:
-\begin{equation}
-  q(\varphi_k) = \Dir( \varphi_k \mid \beta + \sum_{d=1}^D
-  \sum_{n=1}^N \chi_{kdn} ), \qquad
-  q(\theta_d) = \Dir( \theta_d \mid \alpha + \sum_{n=1}^N \upxi_{dn} )
-\end{equation}
-To form a local approximation we first remove the influence of the
-$(d,n)^{th}$ component by subtracting the corresponding natural statistic:
-\begin{equation}
-   q_k^{\backslash dn}(\varphi_k) = \Dir( \varphi_k \mid \beta +
-   \sum_{d=1}^D \sum_{n' \neq n} \chi_{kdn'} ), \qquad
-   q_d^{\backslash n}(\theta_d) = \Dir( \theta_d \mid \alpha + \sum_{n' \neq n}
-   \upxi_{dn'} )
-\end{equation}
-The factor $q_k^{\backslash dn}(\varphi_k)$ represents the
-distribution on topic $\varphi_k$ after removing influence of word $n$
-in document $d$.  Similarly, $q_d^{\backslash n}(\theta_d)$ is the
-residual distribution on document-topic proportions.  In EP these are
-sometimes referred to as the \emph{cavity} distributions.  The local
-approximation is thus a Dirichlet-Multinomial mixture:
-\begin{align}
-  \hat{p}(\varphi, y_{dn} \mid \Ycal_{t-1}) &\propto \left[ \prod_k
-        q_k^{\backslash dn}(\varphi_k) \right] \sum_k \pi_k(y_{dn})
-        \varphi_k(w_{dn}) \EE_{q_d^{\backslash n}} \left[ \theta_d(k)
-      \right] \\
-  &\propto \sum_k C_k \pi_k(y_{dn}) \Dir( \varphi_k \mid \cdot )
-\end{align}
-Mixture weights $C_k$ and Dirichlet parameters can be easily
-calculated, though we omit the details for brevity.  For planning we
-approximate $\hat{p}$ with a single Dirichlet-Multinomial distribution
-via moment-matching.  We can thus easily calculate the variational
-bound on MI used in planning.
+% \section{Example: Labeled LDA}
 
-\begin{figure}[t]
-  \centering
-  \begin{tabular}{cc}
-    \includegraphics[width=0.45\textwidth]{vartop} &
-    \includegraphics[width=0.45\textwidth]{tv.png}
-  \end{tabular}
-  \caption{\small \textbf{Preliminary Results} \emph{Left:} Posterior
-    mean of inferred topics.  \emph{Right:} Total variation error of
-    estimated topics.  The posterior distribution concentrates on the
-    correct topic ordering in the limit as all annotations are
-    provided.  As a result, the TV error thus penalizes incorrect
-    orderings.}
-  \label{fig:llda_results}
-\end{figure}
 
-As a preliminary experiment we fit LLDA to a simulated dataset of
-$D=500$ documents, each with $N=100$ words, and we use the \emph{bars}
-dataset introduced in Griffiths and Steyvers.  Specifically, when
-topics are arranged into a $5\times 5$ square they place equal
-probability in a single column or row, and zero probability elsewhere.
-The annotation distribution assigns $y_{dn} = z_{dn}$ with probability
-proportional to $1-\epsilon$ and $\epsilon$ otherwise.  In this way
-annotations act as true topic assignments with high probability.  We
-thus expect topic ordering to stabilize in the limit as all words are
-labeled, with the topic posterior concentrating on the correct
-ordering.  Fig.~\ref{fig:llda_results} shows results after 100
-training rounds.
+\bibliography{refs}
+\bibliographystyle{abbrvnat}
 
 \end{document}

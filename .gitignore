@@ -44,3 +44,10 @@ data/
 
 # pycharm files
 .idea/
+
+# exclude python binaries
+*.pyc
+*.pyo
+
+# specific PDF files
+varplan_summary.pdf
