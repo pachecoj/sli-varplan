@@ -1,0 +1,105 @@
+# -------------------------------------------------------------------
+# LHOTSE: Toolbox for adaptive statistical models
+# -------------------------------------------------------------------
+# Module: GLOBAL
+# Desc.:  Template for system-dependent part of Makefile
+# -------------------------------------------------------------------
+
+# -------------------------------------------------------------------
+# This file contains system-dependent variables, it is included by
+# the main Makefile.
+#
+# You need to specialize this template to your system. The default
+# way is:
+# - Copy this file to make.inc.def
+# - Edit make.inc.def, specializing it to your system
+#
+# If you repeatedly compile the LHOTSE sources on different systems,
+# the following alternative may be useful:
+# - For a system, pick a novel identifier $$$ (lower-case; replace
+#   $$$ by the identifier in what follows), such that make.inc.$$$
+#   does not already exist
+# - Copy this file to make.inc.$$$, edit it to specialize it to the
+#   system
+# - When calling "make", append the option "where=$$$"
+# -------------------------------------------------------------------
+
+
+# -------------------------------------------------------------------
+# ROOTDIR: Main directory
+# Absolute path of the project root directory (where the Makefile
+# is, and from where the module directories branch off)
+# -------------------------------------------------------------------
+ROOTDIR=/home/Flollo/code
+
+# -------------------------------------------------------------------
+# CXXINCS, CXXLDOPTS: C/C++ headers, libraries
+# On most systems, these variables do not have to be specified, since
+# the C++ compiler is configured appropriately. You may want to
+# specify it if you run into problems without, or if you want to use
+# a compiler different from the standard one on your system. The
+# variable value consists of a sequence of "-I<path>" parts.
+# For GCC, the C++ headers are typically found in
+# /usr/include/c++/<version> and
+# /usr/include/c++/<version>/<system>, and the C headers in
+# /usr/lib/gcc-lib/<system>/<version>/include.
+# The libraries are typically in
+# /usr/lib/gcc-lib/<system>/<version>.
+# NOTE: On some systems, the C++ headers have to be specified, while
+# the C headers and libraries are found automatically.
+# -------------------------------------------------------------------
+#CXXINCS=	-I/usr/include/c++/3.3 -I/usr/include/c++/3.3/i486-linux
+#CXXLDOPTS=
+
+# -------------------------------------------------------------------
+# CC, CXX: C, C++ Compiler
+# The default is "g++" for both values, which correct for GCC.
+# Change this if you do not want to use the default compiler on
+# your system.
+# -------------------------------------------------------------------
+#CC=
+#CXX=
+
+# -------------------------------------------------------------------
+# EXLDOPTS_BLAS, EXLIBS_BLAS: BLAS, LAPACK libraries
+# LHOTSE requires the LAPACK library and a local variant of the
+# BLAS library, furthermore the CBLAS interface to the latter.
+# The static libraries (libXXX.a) are used. EXLDOPTS_BLAS contains
+# "-L<path>", s.t. the library files are found in <path>.
+# EXLIBS_BLAS contains the library string, a sequence of "l<lib>"
+# parts.
+# A free implementation of the BLAS which is tuned automatically
+# to your machine, is given by ATLAS. If you use ATLAS and LAPACK,
+# the recommended EXLIBS_BLAS is:
+#   -llapack -lf77blas -lcblas -latlas
+# Note that the ordering does matter (see ATLAS documentation for
+# details). This is also the def. value of EXLIBS_BLAS, which you
+# probably do not have to change here.
+#
+# Contact your system administrator to find out whether LAPACK and
+# a suitable BLAS version are present on your system, and where
+# these files locate. Note that on many systems installed
+# "by default", the static libraries are missing, or the BLAS
+# libraries are not tuned to the machine. It is strongly
+# recommended to use a BLAS variant tuned to your machine. ATLAS
+# sources can be obtained from:
+#   http://math-atlas.sourceforge.net/
+# See the LHOTSE installation guide for more details.
+# -------------------------------------------------------------------
+
+#EXLDOPTS_BLAS=	-L/kyb/agbs/seeger/lib
+#EXLIBS_BLAS=
+
+# -------------------------------------------------------------------
+# EXINCS_MATLAB, MATOPTS: Matlab interface
+# LHOTSE can be controlled from Matlab through the MATIF interface,
+# which uses the MATLAB MEX interface.
+# If EXINCS_MATLAB contains "-I<path>", the MATLAB MEX headers must
+# be found in <path>.
+# MATOPTS are options to be passed to the "mex" command, apart from
+# the usual compiler/linker options.
+# -------------------------------------------------------------------
+
+MATLAB_PATH = /cygdrive/c/Programme/MATLAB701
+EXINCS_MATLAB=	-I$(MATLAB_PATH)/extern/include
+

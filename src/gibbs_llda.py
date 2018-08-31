@@ -172,21 +172,21 @@ def eval_logjoint(alpha, beta, ppi, labels, wordids, phi, theta, z=[]):
 
 def estimate_entropy_single(rng, phi, z, count_z, ppi, K, Nl, Nd, beta, d, n):
 
-    # split samples
-    Nsamp_tot = len(z)
-    Nsamp = Nsamp_tot # int(np.ceil(Nsamp_tot / 2))
-    z_samp = z # z[0:Nsamp]
-    z_samp_marg = z # z[Nsamp:]
-    count_z_samp_marg = count_z # count_z[:, :, Nsamp:]  # W x K x Nsamp
-    phi_samp = phi # phi[:, :, 0:Nsamp] # K, W, Nsamp
-
-    # # DEBUG: Don't split samples
+    # # split samples
     # Nsamp_tot = len(z)
-    # Nsamp = Nsamp_tot
-    # z_samp = z
-    # z_samp_marg = z
-    # count_z_samp_marg = count_z
-    # phi_samp = phi
+    # Nsamp = int(np.ceil(Nsamp_tot / 2))
+    # z_samp = z[0:Nsamp]
+    # z_samp_marg = z[Nsamp:]
+    # count_z_samp_marg = count_z[:, :, Nsamp:]  # W x K x Nsamp
+    # phi_samp = phi[:, :, 0:Nsamp] # K, W, Nsamp
+
+    # Don't split samples
+    Nsamp_tot = len(z)
+    Nsamp = Nsamp_tot
+    z_samp = z
+    z_samp_marg = z
+    count_z_samp_marg = count_z
+    phi_samp = phi
 
     # sample Y's from joint
     likelihood = ppi[z_samp, :]  # Nsamp x Nl

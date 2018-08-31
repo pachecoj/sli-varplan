@@ -7,24 +7,39 @@ from llda_model import *
 from multiprocessing import Pool, cpu_count
 import archived_dataset
 
-np.random.seed(100000001)
+# INFERENCE ALGORITHM:
+# EP (llda_ep) or Gibbs (llda_gibbs)
+algorithmname = 'llda_ep'  # 'llda_ep' or 'llda_gibbs'
 
-# set options
+# SELECTION / PLANNING ALGORITHN:
+# random - Select uniformly at random
+# discvar - "Discriminative" variational bound
+# discvar_simple - Same as above but with reduced parameters in softmax
+# variational - "Generative" variational bound (no sampling)
+# empirical - Estimate local variational approximation with approximate posterior samples
+# hybrid - variational bound on conditional entropy and empirical estimate of marginal
+sel_algorithmname = 'discvar_simple'
+
+# OTHER OPTIONS
 datadir = '../data/'
 corpus = 'SPARSEBARS'
-algorithmname = 'llda_ep'  # 'llda_ep' or 'llda_gibbs'
-sel_algorithmname = 'random'  # 'discvar' or 'random' or 'variational' or 'empirical' or 'hybrid'
-code = 'DEBUG_DISCVAR'
-numinit = 50
+code = 'DEBUG_DISCVAR_SMALLSAMP'
+numinit = 150
 max_iters = 100
 threshold = 0.1
 train_steps = 100
 useNewton = False
-Nsamp = 1000
+Nsamp = 100
 burn = 100
 numWorkers = cpu_count()
 Nruns = 10
 pool = Pool(numWorkers)
+
+# make sure I don't forget to undo numWorkers
+if (numWorkers == 1):
+    print('WARNING! WARNING! WARNING! WARNING! WARNING! WARNING!')
+    print('numWorkers = 1')
+    print('WARNING! WARNING! WARNING! WARNING! WARNING! WARNING!')
 
 # load vocab / training / test files
 W = len(open(datadir + corpus + "_vocab.dat", 'r').readlines())
@@ -50,14 +65,15 @@ resfile = '%scorpus_%s_alg_%s_sel_%s_numinit_%d_trainsteps_%d_Nsamp_%d_%s.mat' %
 for run_id in range(Nruns):
     this_resfile = '%s_runid_%d.mat' % (resfile[0:-4], run_id)
 
+    # pre-generate random states for Pool tasks
+    np.random.seed(100000001 + run_id)    
+    maxTasks = 10 * numWorkers # shouldn't be more than this
+    rngs = [np.random.RandomState(run_id*maxTasks + i) for i in range(maxTasks)]
+        
     # load all labels and shuffle
     labels_all = archived_dataset.loadLabels(\
                     datadir + corpus + "_labels.dat")
     training_wordids, labels_all = utils.unzipDocsShuffle(training_docs._data, labels_all)
-
-    # pre-generate random states for Pool tasks
-    maxTasks = 10 * numWorkers # shouldn't be more than this
-    rngs = [np.random.RandomState(run_id*maxTasks + i) for i in range(maxTasks)]
 
     # sample labels
     if numinit:
@@ -91,6 +107,7 @@ for run_id in range(Nruns):
     err = np.nan + np.zeros((train_steps,))
     Hcond = []
     Hreal = []
+    Hreal_marg = []
     lam = np.zeros((K,W,train_steps))
     for t in range(train_steps):
         print('Training Epoch %d' % t)
@@ -108,13 +125,16 @@ for run_id in range(Nruns):
         err[t] = utils.tv_error( model.phi_true,  phi_est )
 
         # compute posterior entropy
-        Hreal.append( alg.topic_entropy() )
+        Hhat_marg, Hhat_all = alg.topic_entropy()
+        Hreal_marg.append( Hhat_marg )
+        Hreal.append( Hhat_all )
 
         # save results
         print('TV Error: %0.4f' % err[t])
         print('Realized Entropy: %0.2f' % np.sum(Hreal[-1]))
-        sio.savemat(this_resfile, {'Hcond':Hcond, 'Hreal':Hreal, 'err':err, 'lambda':lam, 'W':W,
-            'K':K, 'max_iters':max_iters, 'threshold':threshold, 'useNewton':useNewton, 'sel_d':sel_d, 'sel_n':sel_n, 'corpus':corpus})
+        sio.savemat(this_resfile, {'Hcond':Hcond, 'Hreal':Hreal, 'Hreal_marg':Hreal_marg, 'err':err, 'lambda':lam, 'W':W,
+            'K':K, 'max_iters':max_iters, 'threshold':threshold, 'useNewton':useNewton, 'sel_d':sel_d,
+            'sel_n':sel_n, 'corpus':corpus})
 
     # done
     print('Saved %s' % this_resfile)

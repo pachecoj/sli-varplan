@@ -1,0 +1,9 @@
+function file = get_run_opt_FN(run_opt)
+file = sprintf('job-data=%s-NInc=%i-Method=%i-IRnd=%i-tau=%g-eps=%g-sigmamethod=%i',...
+    run_opt.data_opt.name,run_opt.num_inclus,...
+    run_opt.method,run_opt.initial_rand,...
+    run_opt.tau,run_opt.eps,run_opt.sigma_method);
+if ispc, 
+    file = strrep(file, 'e+0', 'e+');   
+    file = strrep(file, 'e-0', 'e-');   
+end

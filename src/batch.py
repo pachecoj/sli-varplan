@@ -24,7 +24,7 @@
 # import matplotlib.pyplot as plt
 # from multiprocessing import Pool
 import pickle, string, getopt, sys, random, time, re, pprint, copy, math
-import utils, gibbs_llda, ep_llda
+import utils, gibbs_llda, varmi, discvar_plan, discvar_plan_minimal, discvar_plan_tiny, empmi_plan
 import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
@@ -133,45 +133,130 @@ class LLDA_EP:
             # full variational
             if (algname == 'variational'):
                 if self._numWorkers > 1:
-                    estimates = self._pool.map(ep_llda.run_vibound_EPLLDA,
+                    estimates = self._pool.map(varmi.run_vibound_EPLLDA,
                       [ (self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda,
                          self._omega, docs, words) for docs, words in zip(docchunks, wordchunks) ])
                 else:
-                    estimates = ep_llda.run_vibound_EPLLDA((self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0]))
+                    estimates = varmi.run_vibound_EPLLDA((self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0]))
 
             # "discriminative" variational
             elif (algname == 'discvar'):
                 if self._numWorkers > 1:
-                    res = self._pool.map(ep_llda.run_discvibound_EPLLDA,
+                    res = self._pool.map(discvar_plan.run_discvibound_EPLLDA,
                       [ (self._rngs[i], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta,
                          self._lambda, self._omega, docs, words, self._Nsamp)
                          for i, docs, words in zip(range(numTasks),docchunks, wordchunks) ])
                     estimates = [ res[i][0] for i in range(numTasks) ]
                     self._rngs[0:numTasks] = [ res[i][1] for i in range(numTasks) ]
                 else:
-                    estimates, self._rngs[0] = ep_llda.run_discvibound_EPLLDA((self._rngs[0], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0], self._Nsamp))
+                    estimates, self._rngs[0] = discvar_plan.run_discvibound_EPLLDA((self._rngs[0], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0], self._Nsamp))
 
-            # sample variational posterior
+            # "discriminative" variational (minimal parameterization)
+            elif (algname == 'discvar_simple'):
+                if self._numWorkers > 1:
+                    res = self._pool.map(discvar_plan_minimal.run_discvibound_EPLLDA,
+                      [ (self._rngs[i], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta,
+                         self._lambda, self._omega, docs, words, self._Nsamp)
+                         for i, docs, words in zip(range(numTasks),docchunks, wordchunks) ])
+                    estimates = [ res[i][0] for i in range(numTasks) ]
+                    self._rngs[0:numTasks] = [ res[i][1] for i in range(numTasks) ]
+                else:
+                    estimates, self._rngs[0] = discvar_plan_minimal.run_discvibound_EPLLDA((self._rngs[0], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0], self._Nsamp))
+
+            # "discriminative" variational (tiny parameterization)
+            elif (algname == 'discvar_tiny'):
+                if self._numWorkers > 1:
+                    res = self._pool.map(discvar_plan_tiny.run_discvibound_EPLLDA,
+                      [ (self._rngs[i], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta,
+                         self._lambda, self._omega, docs, words, self._Nsamp)
+                         for i, docs, words in zip(range(numTasks),docchunks, wordchunks) ])
+                    estimates = [ res[i][0] for i in range(numTasks) ]
+                    self._rngs[0:numTasks] = [ res[i][1] for i in range(numTasks) ]
+                else:
+                    estimates, self._rngs[0] = discvar_plan_tiny.run_discvibound_EPLLDA((self._rngs[0], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0], self._Nsamp))                                    
+
+            # empirical estimate of local variational approx.
             elif (algname =='empirical'):
                 if self._numWorkers > 1:
-                    res = self._pool.map(ep_llda.run_estentropy_EPLLDA,
+                    res = self._pool.map(empmi_plan.run_empmi_EPLLDA,
                       [ (self._rngs[i], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docs, words, self._Nsamp)
                         for i, docs, words in zip(range(numTasks), docchunks, wordchunks) ])
                     estimates = [ res[i][0] for i in range(numTasks) ]
                     self._rngs[0:numTasks] = [ res[i][1] for i in range(numTasks) ]
                 else:
-                    estimates, self._rngs[0] = ep_llda.run_estentropy_EPLLDA((self._rngs[0], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0], self._Nsamp))
+                    estimates, self._rngs[0] = empmi_plan.run_empmi_EPLLDA((self._rngs[0], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0], self._Nsamp))
 
             # hybrid empirical / variational
             elif (algname == 'hybrid'):
                 if self._numWorkers > 1:
-                    res = self._pool.map(ep_llda.run_estMIhybrid_EPLLDA,
+                    res = self._pool.map(varmi.run_estMIhybrid_EPLLDA,
                       [ (self._rngs[i], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docs, words, self._Nsamp)
                         for i, docs, words in zip(range(numTasks), docchunks, wordchunks) ])
                     estimates = [ res[i][0] for i in range(numTasks) ]
                     self._rngs[0:numTasks] = [ res[i][1] for i in range(numTasks) ]
                 else:
-                    estimates, self._rngs[0] = ep_llda.run_estMIhybrid_EPLLDA((self._rngs[0], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0], self._Nsamp))
+                    estimates, self._rngs[0] = varmi.run_estMIhybrid_EPLLDA((self._rngs[0], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0], self._Nsamp))
+
+            # debug
+            elif (algname == 'debug'):
+
+                # # compute discriminative variational bound
+                # print('Computing variational bounds...')
+                # if self._numWorkers > 1:
+                #     res = self._pool.map(discvar_plan.run_discvibound_EPLLDA,
+                #       [ (self._rngs[i], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta,
+                #          self._lambda, self._omega, docs, words, self._Nsamp)
+                #          for i, docs, words in zip(range(numTasks),docchunks, wordchunks) ])
+                #     estvar = [ res[i][0] for i in range(numTasks) ]
+                #     self._rngs[0:numTasks] = [ res[i][1] for i in range(numTasks) ]
+                # else:
+                #     estvar, self._rngs[0] = discvar_plan.run_discvibound_EPLLDA((self._rngs[0], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0], self._Nsamp))
+                # print('done.')
+
+                # hybrid variational
+                if self._numWorkers > 1:
+                    res = self._pool.map(varmi.run_estMIhybrid_EPLLDA,
+                      [ (self._rngs[i], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docs, words, self._Nsamp)
+                        for i, docs, words in zip(range(numTasks), docchunks, wordchunks) ])
+                    estvar = [ res[i][0] for i in range(numTasks) ]
+                    self._rngs[0:numTasks] = [ res[i][1] for i in range(numTasks) ]
+                else:
+                    estvar, self._rngs[0] = varmi.run_estMIhybrid_EPLLDA((self._rngs[0], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0], self._Nsamp))                
+
+                # sample sizes for empirical estimate
+                Nsamp = 100
+                Ntimes = 10
+
+                # compute empirical estimates
+                estemp = np.zeros((len(doclist),Ntimes))
+                for iter in range(Ntimes):
+                    print('Empirical approximation: %d of %d' % (iter, Ntimes))
+                    if self._numWorkers > 1:
+                        res = self._pool.map(empmi_plan.run_empmi_EPLLDA,
+                                         [ (self._rngs[i], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docs, words, self._Nsamp) for i, docs, words in zip(range(numTasks), docchunks, wordchunks) ])
+                        estimates = [ res[i][0] for i in range(numTasks) ]
+                        estemp[:,iter] = np.concatenate( estimates ).flatten()
+                        self._rngs[0:numTasks] = [ res[i][1] for i in range(numTasks) ]
+                    else:
+                        estemp[:,iter], self._rngs[0] = empmi_plan.run_empmi_EPLLDA((self._rngs[0], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0], self._Nsamp))
+
+                # compute mean / std of empirical
+                mean_estemp = np.mean(estemp, axis=1)
+                std_estemp = np.std(estemp, axis=1)
+                
+                # plot stuff
+                import matplotlib.pyplot as plt
+                plt.plot(np.arange(len(doclist)), np.concatenate(estvar).flatten(), '-k', label='Variational')
+                plt.plot(np.arange(len(doclist)), mean_estemp, '-g', label='Empirical')
+                plt.plot(np.arange(len(doclist)), mean_estemp - std_estemp, '--g')
+                plt.plot(np.arange(len(doclist)), mean_estemp + std_estemp, '--g')
+                plt.xlabel('Word Index')
+                plt.ylabel('Mutual Information')
+                plt.legend()
+                plt.show()
+
+                import IPython
+                IPython.embed()
 
             # find minimum conditional entropy
             MI = np.concatenate( estimates ).flatten()
@@ -223,10 +308,10 @@ class LLDA_EP:
         """
         Compute entropy of topic posterior approx q(\phi)
         """
-        Hhat = 0
+        Hhat_marg = np.zeros(self._K)
         for k in range(self._K):
-            Hhat += stats.dirichlet.entropy( self._lambda[k] )
-        return Hhat
+            Hhat_marg[k] = stats.dirichlet.entropy( self._lambda[k] )
+        return (Hhat_marg, np.sum(Hhat_marg))
 
     def update_omega_zeta(self):
         """
@@ -577,11 +662,18 @@ class LLDA_Gibbs:
             log_pcond_phi[k] = \
                 utils.dirichlet_logpdf(phi_samp[k, ...], beta_sim[:, k, :])
 
-        # estimate marginal p(\phi | words)
+        # estimate individual marginals p(\phi_k | words)
         logZ = np.max( log_pcond_phi, axis=2 ) # K x phi-samples
         pcond_phi = np.exp( log_pcond_phi - logZ[...,np.newaxis] ) # K x phi-samples x z-samples
-        logp_phi = logZ + np.log( 1/Nsamp * np.sum(pcond_phi, axis=2) ) # K x phi-samples
+        logp_phi_k = logZ + np.log( 1/Nsamp * np.sum(pcond_phi, axis=2) ) # K x phi-samples
 
-        # estimate entropy
-        Hhat = 1/Nsamp * np.sum( - logp_phi, axis=1 )
-        return Hhat
+        # estimate complete marginal p(\phi | words)
+        logZ_all = np.max( log_pcond_phi )
+        pcond_phi_all = np.exp( np.sum(log_pcond_phi, axis=0) - logZ_all ) # phi-samples x z-samples
+        logp_phi_all = logZ_all + np.log( 1/Nsamp * np.sum(pcond_phi_all, axis=1) ) # phi-samples vector
+
+        # estimate entropies
+        Hhat_marg = 1/Nsamp * np.sum( - logp_phi_k, axis=1 ) # K-vec
+        Hhat_all = 1/Nsamp * np.sum( - logp_phi_all ) # scalar
+
+        return (Hhat_marg, Hhat_all)
