@@ -1,10 +1,11 @@
-function ind = VarSelect_Designed_Experiment(i,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,order,num_initial_rand)
+function [ind, scores] = VarSelect_Affine(i,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,order,num_initial_rand)
 if i <= num_initial_rand
   ind = Select_Random_Experiment(i,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,order);
+  scores = 0;
 else
   n = size(X,1);
 
-  % find all that candU that are not used yet
+  % find all the candU that are not used yet
   poss = true(size(candU,2),1);
   poss(order(1:i-1)) = false;
   poss = find(poss);
@@ -13,15 +14,11 @@ else
   U = U';
   
   % sample matrix A from posterior
-  num_Asamples = 40;
-  A = zeros([n,n,num_Asamples]);  
-  Ainv = zeros([n,n,num_Asamples]);  
-  AinvT = zeros([n,n,num_Asamples]);    
-  for k = 1:num_Asamples    
+  N_samp = 100;
+  A = zeros([n,n,N_samp]);  
+  for k = 1:N_samp    
     [~, thisA] = eplin_sampxcand(X,U,sigma_noise^2,1,sitepi,siteb,L,gamma,poss_candU);    
     A(:,:,k) = thisA;
-    Ainv(:,:,k) = inv( thisA );
-    AinvT(:,:,k) = Ainv(:,:,k)';
   end
   
   % compute score for each U candidate
@@ -31,22 +28,26 @@ else
     
     % compute moments
     Lam = zeros(n,n);    
-    M = zeros(n,num_Asamples);
-    for k=1:num_Asamples
-      Lam = Lam + sigma_noise^2*Ainv(:,:,k)*AinvT(:,:,k) + ...
-        Ainv(:,:,k)*(u*u')*AinvT(:,:,k);
-      M(:,k) = Ainv(:,:,k)*u;      
+    M = zeros(n,N_samp);
+    for k=1:N_samp    
+      Lam = Lam + A(:,:,k)\(sigma_noise^2 + u*u')/(A(:,:,k)');            
+      M(:,k) = A(:,:,k)\u;
     end
-    invLam = inv(Lam);
             
     % sum score over rows of A
     for j = 1:n
       calA = shiftdim( A(j,:,:), 1 ); % NxM      
-      AM = calA * M';
-      scores(ui) = scores(ui) + trace( AM * invLam * AM' );
-    end
+      AMT = calA * M';
+      scores(ui) = scores(ui) + 1 / 2 / N_samp * trace( AMT / Lam * AMT' );
+    end    
   end
-%   scores = scores / n / num_Asamples;
+
+%   % add marginal entropy
+%   for j = 1:n
+%     scores = scores + n/2 * log( 2*pi*exp(1) ) - 1/2 * log( det( L{j}*L{j}'/sigma_noise/sigma_noise ) );
+%   end      
+  
+  % select index
   [void,ind] = max(scores);
   ind = poss(ind);
   fprintf('Selected candidate %i with score %g.\n',ind,void);

@@ -14,7 +14,7 @@ rng(0);
 
 % some overhead
 addpath(fileparts(pwd))
-close all
+% close all
 
 if nargin < 2,    error('Not enough parameters.');end
 if nargin < 3,    jobid = -1; end
@@ -40,38 +40,22 @@ switch exp_type
             r = add(r,get_run_opt(d(i), 50,      5,     0,     3.1623, 0.1,0.000184322));            
         end
         labels = {'LD','LM','LR','GD','GR'};
-        
+             
     case 'debug'
-        rounds = 1; r = []; d = [];
-        dir = 'data/debug';
-        sigma_noise = 1e-4;
-        
-        % set data parameters
-        %         get_data_opt(name,N, type_input,num_input,nnz_input,num_initial,input_scale,linear,SDE,sigma_noise,  net)        
-        d = add(d,get_data_opt('N3n2',10,'sparse', 200,      3,         1,          1e-2,          0,     1,  sigma_noise,    'SW10'));
-
-        for i = 1:length(d)
-            % get_run_opt(data_opt,num_inclus,method,initial_rand,tau,eps,sigma_method)            
-            r = add(r,get_run_opt(d(i), 20,      1,    1,         6.3096, 0.1, sigma_noise*1.2784));
-            r = add(r,get_run_opt(d(i), 20,      3,    1,         6.3096, 0.1, sigma_noise*1.2784));
-            r = add(r,get_run_opt(d(i), 20,      6,    1,         6.3096, 0.1, sigma_noise*1.2784));
-        end
-        labels = {'MCMC Design','Random','Variational Design'};
-     
-    case 'debug2'
         rounds = 5; r = []; d = [];
-        dir = 'data/debug2';
+        dir = 'data/debug';
         sigma_noise = 1e-4;
         %         get_data_opt(name,N, type_input,num_input,nnz_input,num_initial,input_scale,linear,SDE,sigma_noise,  net)
         d = add(d,get_data_opt('N3n2',50,'sparse', 200,      3,         1,          1e-2,          0,     1,  sigma_noise,    'SW'));
 
         for i = 1:length(d)
             % get_run_opt(data_opt,num_inclus,method,initial_rand,tau,eps,sigma_method)            
-            r = add(r,get_run_opt(d(i), 50,      1,    20,         -1, 0.1, sigma_noise*1.84322));
-            r = add(r,get_run_opt(d(i), 50,      3,    20,         -1, 0.1, sigma_noise*1.84322));
-            r = add(r,get_run_opt(d(i), 50,      6,    20,         -1, 0.1, sigma_noise*1.84322));
+%             r = add(r,get_run_opt(d(i), 50,      1,    20,         -1, 0.1, sigma_noise*1.84322));
+%             r = add(r,get_run_opt(d(i), 50,      3,    20,         -1, 0.1, sigma_noise*1.84322));
+%             r = add(r,get_run_opt(d(i), 50,      6,    20,         -1, 0.1, sigma_noise*1.84322));
+            r = add(r,get_run_opt(d(i), 50,      7,    20,         -1, 0.1, sigma_noise*1.84322));              
         end
-        labels = {'MCMC Design','Random','Variational Design'};
+        labels = {'EP','Random','Variational (Affine)','Variational (Linear)'};
 
     case 'noise'
         rounds = 50; r = []; d = [];
@@ -164,17 +148,6 @@ switch action
     case 'run'
         for i = 1:length(r)
           run_job(dir,r(i),rounds);
-        end
-%      i = 3;
-%      run_job(dir,r(i),rounds);
-
-    case 'eval'
-        if jobid == -1
-            for i = 1:length(r)
-                evaluate_job(dir,r(i),rounds,1);
-            end
-        else
-            evaluate_job(dir,r(jobid),rounds,1);
         end
         
     case 'plot' 

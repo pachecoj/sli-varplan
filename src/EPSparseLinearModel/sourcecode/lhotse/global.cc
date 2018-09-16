@@ -80,7 +80,7 @@ void* operator new[](size_t n)
 #endif
 }
 
-void operator delete(void* ptr) noexcept (true)
+void operator delete(void* ptr)
 {
 #ifdef USE_OWN_MEMMAN
   if (FixedMemManager::isMMInit())
@@ -93,7 +93,7 @@ void operator delete(void* ptr) noexcept (true)
 #endif
 }
 
-void operator delete[](void* ptr) noexcept (true)
+void operator delete[](void* ptr) 
 {
 #ifdef USE_OWN_MEMMAN
   if (FixedMemManager::isMMInit())

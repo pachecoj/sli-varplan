@@ -71,7 +71,7 @@
       shand.changeRep(n); sbuff=shand.p();
     }
     mygaussq(4,n,0.0,abscs,wgths,sbuff);
-    ArrayUtils<double>::applyFunc(wgths,wgths,n,ptr_fun(exp));
+    ArrayUtils<double>::applyFunc(wgths,wgths,n,ptr_fun<double, double>(exp));
   }
 
   void GaussQuad::gaussLaguerre(int n,double alpha,double* lwgths,

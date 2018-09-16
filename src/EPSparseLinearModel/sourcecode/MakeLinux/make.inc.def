@@ -30,8 +30,8 @@
 # Absolute path of the project root directory (where the Makefile
 # is, and from where the module directories branch off)
 # -------------------------------------------------------------------
-# ROOTDIR=/home/pachecoj/Research/sli-sensorMgmt/src/EPSparseLinearModel/sourcecode
-ROOTDIR=/afs/csail.mit.edu/u/p/pachecoj/Research/sli-sensorMgmt/src/EPSparseLinearModel/sourcecode
+ROOTDIR=/home/pachecoj/Research/sli-varplan/src/EPSparseLinearModel/sourcecode
+# ROOTDIR=/afs/csail.mit.edu/u/p/pachecoj/Research/sli-varplan/src/EPSparseLinearModel/sourcecode
 
 # -------------------------------------------------------------------
 # CXXINCS, CXXLDOPTS: C/C++ headers, libraries
@@ -49,7 +49,7 @@ ROOTDIR=/afs/csail.mit.edu/u/p/pachecoj/Research/sli-sensorMgmt/src/EPSparseLine
 # NOTE: On some systems, the C++ headers have to be specified, while
 # the C headers and libraries are found automatically.
 # -------------------------------------------------------------------
-CXXINCS=	-I/usr/include/c++/4.8 -I/usr/include/c++/4.8/i486-linux
+#CXXINCS=	-I/usr/include/c++/4.8 -I/usr/include/c++/4.8/i486-linux
 #CXXLDOPTS=
 
 # -------------------------------------------------------------------
@@ -125,8 +125,8 @@ CXXINCS=	-I/usr/include/c++/4.8 -I/usr/include/c++/4.8/i486-linux
 # the usual compiler/linker options.
 # -------------------------------------------------------------------
 
-#EXINCS_MATLAB=	-I/usr/local/MATLAB/R2014b/extern/include
-EXINCS_MATLAB=	-I/afs/csail.mit.edu/system/amd64_linux26/matlab/latest/extern/include/
+EXINCS_MATLAB=	-I/usr/local/MATLAB/R2018a/extern/include
+#EXINCS_MATLAB=	-I/afs/csail.mit.edu/system/amd64_linux26/matlab/latest/extern/include/
 #MATOPTS=
 
 # -------------------------------------------------------------------

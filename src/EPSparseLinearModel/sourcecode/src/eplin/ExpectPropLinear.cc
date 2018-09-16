@@ -874,7 +874,7 @@
       prior->outerProd(*tempvec,*tempmat2);
       tempmat2->addseye(1.0); // I + X Pi^-1 X^T
       tempmat2->setStrctPatt(MatStrct::lower);
-      tempvec->apply1(sites->getSitePi(),ptr_fun(sqrt));
+      tempvec->apply1(sites->getSitePi(),ptr_fun<double, double>(sqrt));
       tempvec->div(1.0,*tempvec);
       smat.mulDiag(*tempvec,smat); // Pi^-1/2 S
       if (tempmat2->eigenDecomp(*tempvec,*tempmat)!=0) // U D U^T
@@ -974,7 +974,7 @@
     if (lsites==0)
       throw WrongStatusException(EXCEPT_MSG("Need Laplace sites!"));
     tau=lsites->getTau();
-    tempvec2.apply1(curra,ptr_fun(fabs));
+    tempvec2.apply1(curra,ptr_fun<double, double>(fabs));
     tempvec2.prod(tau/sqrt(sigsq)); // 1/mu (for lam=1)
     for (i=0; i<n; i++)
       if ((temp=tempvec2[i])<1e-30)

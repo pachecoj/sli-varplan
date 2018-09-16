@@ -102,7 +102,7 @@ FC=		gfortran
 FFLAGS=		-c -funroll-all-loops -fno-f2c -O3 
 MATOPTS=	-cxx
 FORCE_STATIC=	-static
-MEXCMD=		mex -v -largeArrayDims # -compatibleArrayDims # 
+MEXCMD=		mex -v -R2018a # -compatibleArrayDims -largeArrayDims 
 
 # -------------------------------------------------------------------
 # Include make.inc.$(where) file with system-dependent variables
@@ -151,7 +151,7 @@ GCCOPTS_mexstat=	-DMATLAB_MEX -DUSE_MATLAB_MM -std=c++11 -fPIC
 GCCOPTS_profno=
 GCCOPTS_profyes=	-pg
 
-LLL_TEMP=	/usr/lib/
+LLL_TEMP=	/usr/lib/x86_64-linux-gnu/
 LOCALLIBS_mexno=	$(FORCE_STATIC) -lgsl $(EXLIBS_BLAS) -lm
 LOCALLIBS_mexyes=	-lgsl $(EXLIBS_BLAS) -lm
 LOCALLIBS_mexstat=	$(LLL_TEMP)liblapack.a -lcblas -lf77blas -lgsl -latlas -lgfortran -lm # $(LLL_TEMP)libgsl.a $(LLL_TEMP)libatlas.a # /usr/lib/gcc/x86_64-linux-gnu/4.8/libgfortran.a $(LLL_TEMP)libf77blas.a $(LLL_TEMP)libcblas.a 

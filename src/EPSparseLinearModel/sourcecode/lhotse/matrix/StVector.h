@@ -356,7 +356,7 @@
      * @return Norm
      */
     virtual double norm1() const {
-      return accumulate(accum_fun(std::plus<double>(),0.0),ptr_fun(fabs));
+      return accumulate(accum_fun(std::plus<double>(),0.0),ptr_fun<double, double>(fabs));
     }
 
     /**
@@ -374,7 +374,7 @@
      * @return Norm
      */
     virtual double normInf() const {
-      return accumulate(accum_fun(BinFuncMax<double>(),0.0),ptr_fun(fabs));
+      return accumulate(accum_fun(BinFuncMax<double>(),0.0),ptr_fun<double, double>(fabs));
     }
 
     /**
@@ -389,7 +389,7 @@
      * @return Log determinant of pos. diagonal matrix
      */
     virtual double logDet() const {
-      return accumulate(accum_fun(std::plus<double>(),0.0),ptr_fun(log));
+      return accumulate(accum_fun(std::plus<double>(),0.0),ptr_fun<double, double>(log));
     }
 
     // Initialization methods

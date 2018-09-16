@@ -2128,7 +2128,7 @@ F77_FUNC(dchex,DCHEX) (double* r,int* ldr,int* p,int* k,int* l,double* z,
 	}
       }
     }
-    diag.apply1(ptr_fun(sqrt));
+    diag.apply1(ptr_fun<double, double>(sqrt));
   }
 
   void StMatrix::cholDecLowRankMinus(StVector& diag,StMatrix& lFact) const
@@ -2175,7 +2175,7 @@ F77_FUNC(dchex,DCHEX) (double* r,int* ldr,int* p,int* k,int* l,double* z,
 	}
       }
     }
-    diag.apply1(ptr_fun(sqrt));
+    diag.apply1(ptr_fun<double, double>(sqrt));
   }
 
   /*
@@ -2902,7 +2902,7 @@ F77_FUNC(dchex,DCHEX) (double* r,int* ldr,int* p,int* k,int* l,double* z,
 
     // Update of L. Note that \tilde{l}_{i,j} = p_i \beta_j for i>j and
     // \tilde{l}_{i,i}=1
-    wkvec->apply1(ptr_fun(sqrt)); // sqrt
+    wkvec->apply1(ptr_fun<double,double>(sqrt)); // sqrt
     ArrayUtils<double>::fill(warr.p(),0.0,n);
     pB=plin.p()+(n-1); betaB=(double*) betaArr.p()+(n-2);
     lamB=(double*) lamArr.p()+(n-1);

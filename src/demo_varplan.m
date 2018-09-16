@@ -67,7 +67,7 @@ dx = x_grid(2) - x_grid(1);
 %
 % DO MULTIPLE TRIALS
 %
-Nruns = 11;
+Nruns = 1;
 MI_err_mcmc = zeros(Nsensors,N,Nruns);
 H_cond_err_ep = zeros(Nsensors,N,Nruns);  
 H_cond_err_adf = zeros(Nsensors,N,Nruns);

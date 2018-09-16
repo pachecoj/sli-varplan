@@ -41,7 +41,7 @@ for r = 1:rounds
   GG = (A > run_opt.eps) | (A < -run_opt.eps);
   deg = mean(sum(GG,2));
   switch run_opt.method
-    case {1,3,6}
+    case {1,3,6,7}
       if run_opt.tau ~= -1
         tau_est = run_opt.tau;
       else
@@ -69,7 +69,9 @@ for r = 1:rounds
     case 5
       [Qm,Qv,times,order] = Gauss_Random(U,X,candU,candX,sigma_noise,sigma_model,run_opt.num_inclus);
     case 6
-      [Qm,Qv,times,order] = Laplace_VarDesign(U,X,candU,candX,sigma_noise,tau_est,run_opt.num_inclus,run_opt.initial_rand);
+      [Qm,Qv,times,order] = Laplace_VarDesign_Affine(U,X,candU,candX,sigma_noise,tau_est,run_opt.num_inclus,run_opt.initial_rand);
+    case 7
+      [Qm,Qv,times,order] = Laplace_VarDesign_Linear(U,X,candU,candX,sigma_noise,tau_est,run_opt.num_inclus,run_opt.initial_rand);
     otherwise
       error('Unkown method');
   end
@@ -87,15 +89,14 @@ orderfunction = @(i,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,order)...
   (Select_Designed_Experiment(i,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,order,num_initial_rand));
 [Qm,Qv,times,order] = Laplace_Inference(U,X,candU,candX,sigma_noise,tau,num_inclus,orderfunction);
 
-function [Qm,Qv,times,order] = Laplace_VarDesign(U,X,candU,candX,sigma_noise,tau,num_inclus,num_initial_rand)
-% orderfunction = @(i,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,order)...
-%   (VarSelect_Designed_Experiment(i,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,order,num_initial_rand));
-% orderfunction = @(i,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,order)...
-%   (VarSelect_Designed_Experiment2(i,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,order,num_initial_rand));
-% orderfunction = @(i,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,order)...
-%   (Debug_VarSelect_Designed_Experiment3(i,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,order,num_initial_rand));
+function [Qm,Qv,times,order] = Laplace_VarDesign_Affine(U,X,candU,candX,sigma_noise,tau,num_inclus,num_initial_rand)
 orderfunction = @(i,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,order)...
-  (VarSelect_Designed_Experiment4(i,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,order,num_initial_rand));
+  (VarSelect_Affine(i,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,order,num_initial_rand));
+[Qm,Qv,times,order] = Laplace_Inference(U,X,candU,candX,sigma_noise,tau,num_inclus,orderfunction);
+
+function [Qm,Qv,times,order] = Laplace_VarDesign_Linear(U,X,candU,candX,sigma_noise,tau,num_inclus,num_initial_rand)
+orderfunction = @(i,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,order)...
+  (VarSelect_Linear(i,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,order,num_initial_rand));
 [Qm,Qv,times,order] = Laplace_Inference(U,X,candU,candX,sigma_noise,tau,num_inclus,orderfunction);
 
 function [Qm,Qv,times,order] = Laplace_Random(U,X,candU,candX,sigma_noise,tau,num_inclus)

@@ -9,7 +9,7 @@ import archived_dataset
 
 # INFERENCE ALGORITHM:
 # EP (llda_ep) or Gibbs (llda_gibbs)
-algorithmname = 'llda_ep'  # 'llda_ep' or 'llda_gibbs'
+algorithmname = 'llda_gibbs'  # 'llda_ep' or 'llda_gibbs'
 
 # SELECTION / PLANNING ALGORITHN:
 # random - Select uniformly at random
@@ -18,18 +18,18 @@ algorithmname = 'llda_ep'  # 'llda_ep' or 'llda_gibbs'
 # variational - "Generative" variational bound (no sampling)
 # empirical - Estimate local variational approximation with approximate posterior samples
 # hybrid - variational bound on conditional entropy and empirical estimate of marginal
-sel_algorithmname = 'discvar_simple'
+sel_algorithmname = 'gibbs'
 
 # OTHER OPTIONS
 datadir = '../data/'
 corpus = 'SPARSEBARS'
-code = 'DEBUG_DISCVAR_SMALLSAMP'
+code = 'DISCVAR'
 numinit = 150
 max_iters = 100
 threshold = 0.1
 train_steps = 100
 useNewton = False
-Nsamp = 100
+Nsamp = 1000
 burn = 100
 numWorkers = cpu_count()
 Nruns = 10

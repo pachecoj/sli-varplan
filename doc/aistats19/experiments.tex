@@ -1,0 +1,24 @@
+In this section we demonstrate the utility of our proposed variational
+planning in three scenarios.  First, we consider target state
+estimation in a static sensor network where measurements are generated
+from a single sensor at each time.  For location dependent observation
+noise we see that MI based selection leads to drawing measurements
+closest to the predicted target location.  Next, we explore gene
+regulatory network under a sparse linear model, as previously studied
+in~\cite{seeger2008bayesian, steinke2007experimental}.  While sharing
+both approaches share identical EP inference, our planning phase is
+based on a valid lower bound to MI, whereas the previous approaches
+use heuristic steps to update the local posterior approximation.
+Finally, we apply variational planning to topic modeling under the
+LLDA model.  Unlike previous models this one contains several nuisance
+parameters which must be marginalized out, thus increasing
+sample-complexity for Monte Carlo based estimates of the MI objective.
+
+\subsection{Sensor Selection}
+
+
+
+
+\subsection{Regulatory Network}
+
+\subsection{Labeled LDA}
