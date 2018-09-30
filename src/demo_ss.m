@@ -15,7 +15,7 @@
 clear variables
 close all
 
-seed = 2;
+seed = 1;
 rng(seed);
 
 % method defs
@@ -33,7 +33,7 @@ alpha = 0.05;      % measurement variance factor
 T = 20;           % # scans
 mu_0 = 0;         % prior mean
 sig_0 = sig_u;    % prior stdev
-N = 1;            % # Monte Carlo samples
+N = 20;            % # Monte Carlo samples
 Ngrid = 1000;     % # discrete grid points for numerical approx.
 numSensors = 10;      % # of sensor locations
 num_particles = 500;  % # of particle filter particles
@@ -70,9 +70,12 @@ for n=1:N
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% SELECTION: ORACLE, INFERENCE: OPTIMAL
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % Oracle selection means the sensor closest to the actual target
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   log_marg = sum_product_hmm( prior, trans, like_oracle );
-  [~,idx] = max( log_marg, [], 1 );
+  [~,idx] = max( log_marg, [], 1 );  
   mpm_oracle = x_grid(idx);    
+  rms_state(VI_OPT,n) = sqrt(mean((mpm_hmmvi - mpm_opt).^2));
     
   % show true marginal
   if N==1
@@ -96,6 +99,9 @@ for n=1:N
     
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% SELECTION: OPTIMAL, INFERENCE: OPTIMAL
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % Optimal selection is the sensor maximizing MI by
+  % numerical integration.
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   [log_marg, Ks_opt] = sum_product_hmm_optselect( ...
     x_grid, prior, trans, like_all, loc, alpha, 1 );
@@ -242,19 +248,31 @@ for n=1:N
   fprintf('done.\n');
 end
 
+% ORACLE_OPT = 1;
+% OPT_OPT = 2;
+% VI_OPT = 3;
+% ORACLE_PF = 4;
+% MCMC_PF = 5;
+% VI_PF = 6;
 
 % plot MPM error
 figure('InvertHardcopy','off','Color',[1 1 1]);
 set(gca,'FontSize',14);
-boxplot(rms_state([VI_OPT, VI_PF, MCMC_PF],:)');
-set(gca,'XTickLabel',{'Exact VI','PF VI','MCMI'});
+boxplot(rms_state([ORACLE_OPT, OPT_OPT, VI_OPT],:)');
+set(gca,'XTickLabel',{'Oracle / Optimal','PF VI','MCMI'});
 ylabel('RMS Error');
-title('MPM Estimate Error');
+title('State Error (Exact Inference)');
+figure('InvertHardcopy','off','Color',[1 1 1]);
+set(gca,'FontSize',14);
+boxplot(rms_state([ORACLE_PF, MCMC_PF, VI_PF],:)');
+set(gca,'XTickLabel',{'Oracle / Optimal','PF VI','MCMI'});
+ylabel('RMS Error');
+title('State Error (Particle Filter)');
 
 % plot selection error
 figure('InvertHardcopy','off','Color',[1 1 1]);
 set(gca,'FontSize',14);
-boxplot(rms_sensor([VI_OPT, VI_PF, MCMC_PF],:)');
+boxplot(rms_sensor([ORACLE_OPT, OPT_OPT, VI_OPT, ORACLE_PF, MCMC_PF, VI_PF],:)');
 set(gca,'XTickLabel',{'Exact VI','PF VI','MCMI'});
 ylabel('RMS Error');
 title('RMS Sensor Selection Error');

@@ -1,0 +1,80 @@
+For any valid distribution $\omega(x\mid y)$, the following is a lower
+bound on MI,
+\begin{equation}\label{eq:varmi}
+  I(X;Y) \geq H(X) + \EE_p[ \log \omega(X\mid Y) ] \equiv \widetilde{I}(X;Y).
+\end{equation}
+This well-known bound is a result of Gibbs' inequality and has been
+independently explored for channel coding~\citep{agakov2004algorithm},
+reinforcement learning~\citep{mohamed2015variational}, and feature
+selection~\citep{gao2016variational, chen2018learning}.
+
+%% arises from nonnegativity of the Kullback-Leibler divergence
+%% since, $KL(p\|q) = H_p(q) - H(p) \geq 0$ which implies that $H(p) \geq
+%% H_p(q)$.  The bound is tight when $q(X\mid Y)$ and $p(X\mid Y)$ are
+%% equivalent in distribution.
+
+Ideally, at time $t$ we would optimize a lower bound on the mutual
+information $I(X;Y_t)$ w.r.t.~the true posterior $p(x \mid
+\Ycal_{t-1}, \Acal_{t-1})$.  Since the posterior distribution is
+intractable, we instead approximate the planning objective using a
+variational approximation of the posterior distribution $q_{t-1}(x)$.
+More specifically, we form a local approximation of the joint
+posterior at time $t$,
+\begin{equation}\label{eq:local_approx}
+  \hat{p}_{a_t}(x,y_t) \equiv q_{t-1}(x) p_{a_t}(y_t \mid x).
+\end{equation}
+%% At time $t$ we can form a local
+%% approximation of the joint distribution $p(X,Y_t \mid \Ycal_{t-1},
+%% \Acal_{t-1})$ under hypothesized action $a_t$ as,
+The variational planning objective then optimizes a lower bound on the
+approximate MI,
+\begin{equation}\label{eq:varmi_approx}
+  \max_a \max_\omega H_{\hat{p}_a}(X) + \EE_{\hat{p}_a}\left[ \log \omega(X \mid Y_{t+1})
+  \right].
+\end{equation}
+This bound can be evaluated in parallel for a discrete set of actions
+$1,\ldots,A$.  We note that the distribution $\hat{p}(x,y)$ is
+analogous to the \emph{augmented distribution} at each stage of EP
+inference.  This observation will be used to address annotation models
+in the sequel.
+
+\subsection{Annotation Models}
+
+Until now we have assumed that observations arrive as a result of
+actions.  A common variation is one where data are static and the goal
+of planning is to select the most informative annotations for some
+subset of data, such as in active learning~\citep{settles2012active}.
+
+More specifically, consider a model with fixed data $\{z_1,\ldots,z_D\}$
+and annotations $\{y_1,\ldots,y_D\}$,
+\[
+  p(x,y,z) = p(x) \prod_{d=1}^D p(z_d \mid x) p(y_d \mid z_d). 
+\]
+The planning objective selects the most informative annotation as
+$\max_d I(X;Y_d)$.  Let $\Dcal$ represent the set of all data and any
+annotations that have been previously selected.  MI is computed with
+respect to the distribution,
+\[
+  p(x,y_d \mid \Dcal) \propto p(x \mid \Dcal \setminus \{z_d\}) p(z_d \mid
+    x ) p(y_d \mid z_d),
+\]
+where $p(x \mid \Dcal \setminus \{z_d\})$ represents the posterior
+distribution having removed $z_d$ from the observed data.
+
+We again form a local approximation analogous to the augmented
+distribution of EP.  In this case, we must assume an EP-like posterior
+approximation, given by a product of factor approximations (messages):
+$q(x) \propto \prod_{d=1}^D \psi_d(x)$.  The \emph{cavity
+  distribution} $q^{\backslash d}(x) \propto q(x) / \psi_d(x)$
+expresses the posterior approximation having removed $z_d$.  Our local
+posterior approximation is then given by,
+\[
+  \hat{p}(x, y_d) \propto q^{\backslash d}(x) p(z_d \mid x) p(y_d \mid z_d).
+\]
+The MI lower bound is then identical to~\eqref{eq:varmi_approx}.  More
+complicated models with nuisance variables that must be integrated out
+for planning can be handled in the same manner.  We consider such a
+setting for labeled LDA in Sec.~\ref{sec:llda}.
+
+\subsection{Optimization for Exponential Families}\label{sec:optim}
+\input{optim}

@@ -1,0 +1,128 @@
+The reader may consider an alternative approach to approximating MI,
+which is as follows.  First, approximate the distribution $p(x,y)$ by
+one $\omega(x,y)$ in the exponential family, in particular by
+minimizing $\KL{p}{\omega}$ via moment matching.  Then, since entropy
+can be calculated in closed form under the exponential family,
+approximate $I_p(X;Y) \approx I_{\omega}(X;Y)$.  Interestingly, there
+is a close relationship between this approach and that of
+\SEC\ref{sec:optim}, which in some cases are equivalent.
+
+\subsection{Constrained MI Bound}
+
+Consider a pair of joint and marginal distributions in the exponential
+family,
+\begin{gather*}
+  \omega_{\eta}(x,y) = h(x,y)\exp\left\{ \eta^T \phi(x,y) - A(\eta)
+    \right\}\\ % \equiv \omega_{xy}\\
+  \omega_{\beta}(y) = h(y)\exp\left\{ \beta^T \phi(y) - A(\beta) \right\}.
+  %\equiv \omega_y.
+\end{gather*}
+When $\omega(y) = \int \omega(x,y) \,\deriv x$ are marginally consistent,
+we have that the conditional is $\omega(x\mid y) = \omega(x,y) \div
+\omega(y)$.  As a result, the objective $J(\theta)$ can be
+re-expressed as,
+\begin{align}\label{eq:constrained_mibound}
+  &\min_{\eta, \beta} \;J(\eta,\beta) \equiv \EE_p[ \log \omega_{\beta}(Y) ] - \EE_p[ \log
+    \omega_{\eta}(X,Y) ] \notag \\
+  &\;\text{s.t.} \; \EE_{\omega_{\beta}}[ \phi(Y) ] =
+    \EE_{\omega_{\eta}}[ \phi(Y) ].
+\end{align}
+We have assumed here that $\int \omega(x,y) \,\deriv x$ is in the same
+exponential family as $\omega(y)$.  Then, marginal consistency
+is equivalent to the moment constraints above.  This assumption does not hold in
+general but will simplify later discussion.
+
+When the marginalization constraints are satisfied we have that
+$J(\eta,\beta) = J(\theta)$ by construction, where $\theta$ can be
+expressed in terms of the parameters $\eta$ and $\beta$.  The
+problem~\eqref{eq:constrained_mibound} is then convex on the
+constraint set, though not strictly so since many joint and marginal
+distributions map to the same conditional.  
+
+The objective $J(\eta,\beta)$ is not convex off of the constraints.
+By adding constants $\EE_p[ \log p(X,Y) ]$ and $\EE_p[ - \log p(Y) ]$
+we have the equivalent expression,
+\begin{equation*}
+  J(\eta,\beta) = \text{const.} + \KL{ p_{XY} }{ \omega_{\eta} } - \KL{ p_Y }{
+    \omega_{\beta} },
+\end{equation*}
+which is convex in $\eta$ and concave in $\beta$ by convexity
+properties of Kullback-Leibler for exponential families.
+
+\subsection{Moment Matching}
+
+The zero gradient of $J(\eta,\beta)$ yields the moment matching
+equations, 
+\begin{align}
+  \EE_p[ \phi(X,Y) ] &= \EE_{\omega_{\eta}}[ \phi(X,Y)
+    ] \label{eq:statcond_joint} \\
+  \EE_p[ \phi(Y) ] &= \EE_{\omega_{\beta}}[ \phi(Y) ]. \label{eq:statcond_marg}
+\end{align}
+A solution $\{\eta,\beta\}$ to the above equations is a feasible
+point, given our assumption that $\int \omega(x,y) \,\deriv x$ and
+$\omega(y)$ belong to the same exponential family.
+
+Consider a model where the marginal $p(y)$ is in the exponential
+family, for example when $p(x,y)$ is a mixture distribution with
+discrete label $y$.  In this case, the moment matching condition above
+means $\omega(y) = p(y)$ and thus,
+\begin{equation}
+  \EE_p[ \phi(X,Y) ] = \EE_{p_Y}[ \EE_{\omega_{X\mid Y}}[ \phi(X,y)
+      \mid Y=y ] ],
+\end{equation}
+which is the solution of the unconstrained problem in
+\SEC\ref{sec:optim}.  As a result, it is also a solution to the
+constrained problem~\eqref{eq:constrained_mibound}, since the
+objectives are equal on the constraint set by construction.
+
+Given the moment matched solution we have that the cross entropy
+equals, 
+\[
+  \EE_p[ - \log \omega_{\eta} ] = \EE_p[ - \log h(x) ] - \eta^T \EE_p[
+    \phi(X,Y) ] + A(\eta).
+\]
+For distributions with constant base measure $h(x)$ the above equals
+entropy of $\omega(x,y)$, since $\EE_p[ \phi(X,Y) ] = \EE_\omega[
+  \phi(X,Y) ]$.  The same holds for the marginal entropy and, thus,
+the conditional cross entropy, \mbox{$H_p( \omega(X\mid Y) ) = H_\omega(X
+\mid Y)$}.
+
+
+
+%% equivalent
+%% to the unconstrained problem~\eqref{eq:varmi} in that any feasible
+%% solution to the former implies a solution of the latter, $\omega(x\mid
+%% y) = \omega(x,y) \div \omega(y)$.  Moreover, the objective values are
+%% equal on the constraint set by the Kullback-Leibler chain rule, $\KL{p(x\mid
+%%   y)}{\omega(x\mid y)} = \KL{p(x,y)}{\omega(x,y)} -
+%% \KL{p(y)}{\omega(y)}$.  Combining these properties we have that the
+%% constrained problem~\eqref{eq:constrained_mibound} is convex on the
+%% set of constraints, though not strictly so since there may be many
+%% joint and marginal distributions mapping to the same conditional.
+
+%% Using the shorthand $\omega_{xy}$ and $\omega_y$ for the joint and
+%% marginal, respectively, we then have that the variational MI bound is
+%% given by the constrained optimization,
+%% %% \begin{align}\label{eq:constrained_mibound}
+%% %%   &\min_{\eta, \beta} KL( p_{XY} \| \omega_{XY} ) - KL(
+%% %%     p_Y \| \omega_Y ) \notag \\
+%% %%   &\;\text{s.t.} \; \EE_{\omega_Y}[ \phi(Y) ] =
+%% %%     \EE_{\omega_{XY}}[ \phi(Y) ]
+%% %% \end{align}
+%% \begin{align}\label{eq:constrained_mibound}
+%%   &\min_{\eta, \beta} \;\KL{p_{XY}}{\omega_{XY}} - \KL{p_Y}{\omega_Y} \notag \\
+%%   &\;\text{s.t.} \; \EE_{\omega_Y}[ \phi(Y) ] =
+%%     \EE_{\omega_{XY}}[ \phi(Y) ]
+%% \end{align}
+%% The constraint set imposes marginal consistency, namely that $\omega(y) =
+%% \int \omega(x,y) \deriv x$.
+
+%% \subsection{Approximating Distributions}
+
+%% \RED{Point out that the use of a different variational approximation
+%%   $\omega$ for planning helps resolve issues with underestimating
+%%   variance in $q$.  Since we are free to choose the functional
+%%   dependence of $\omega(x\mid y)$ on $y$ can we develop an experiment
+%%   to show that more expressive models lead to better bounds?  A simple
+%%   comparison between linear and nonlinear Gaussian mean functions should
+%%   be easy.}

@@ -1,0 +1,50 @@
+Consider a model of latent variables $x$ and observations $\Ycal_{t-1}
+= \{y_1,\ldots,y_{t-1}\}$.  At each time $t-1$ a discrete
+\emph{action} $a_{t-1} \in \{1,\ldots,A\}$ parameterizes the
+likelihood, denoted \mbox{$p_{a_{t-1}}(y_{t-1} \mid x)$}.  Given
+observations $\Ycal_{t-1}$ and actions $\actionset_{t-1} =
+\{a_1,\ldots,a_{t-1}\}$ the posterior is:
+\begin{equation}\label{eq:joint}
+  p(x\mid \Ycal_{t-1}; \actionset_{t-1}) \propto p(x)
+    \prod_{i=1}^{t-1} p_{a_i}(y_i \mid x) 
+\end{equation}
+At time $t$ an action $a_t$ is selected to maximize the posterior
+mutual information \mbox{$I(X;Y_t \mid \Ycal_{t-1}, \Acal_{t-1})$}.
+Once an action is selected, new observations are drawn from the
+appropriate likelihood model $y_t \sim p_{a_t}(\cdot \mid x)$ and
+the posterior is updated.
+
+Calculating MI is complicated since the entropy terms require
+expectations under the posterior distribution.  Dropping explicit
+dependence on previous observations $\Ycal_{t-1}$ and actions
+$\Acal_{t-1}$ MI is,
+%% \mbox{$I(X;Y_t \mid \Ycal_{t-1}, \Acal_{t-1})$}. 
+%% \begin{align}
+%%   a_t^{*} &= \argmax_a I_a(X;Y_t \mid \Ycal_{t-1}, \Acal_{t-1}) \\
+%%     &= H(X\mid \Ycal_{t-1}, \Acal_{t-1}) - H_a(X, Y_t \mid
+%%       \Ycal_{t-1}, \Acal_{t-1}). \notag
+%% \end{align}
+\begin{equation}
+  a_t^{*} = \argmax_a H(X) + H_a(Y_t) - H_a(X, Y_t). \notag
+\end{equation}
+The marginal entropy $H(Y_t)$ requires evaluation of the log-posterior
+predictive distribution.  Estimation based on posterior predictive
+samples $\{y^i_t\} \sim p_a(y\mid \Ycal_{t-1}, \Acal_{t-1})$ is
+straightforward.  The empirical plug-in estimate is given by,
+%% \begin{equation}\label{eq:emp_mi}
+%%   \hat{I}_a = \frac{1}{N} \sum_{i=1}^N \log \frac{ p_a(y_t^i \mid x^i)
+%%   }{ \frac{1}{M} \sum_{j=1}^M p_a(y_t^i \mid x^{ij}) }.
+%% \end{equation}
+\begin{equation}\label{eq:est_margent}
+  H(Y_t) \approx - \frac{1}{N} \sum_{i=1}^N \log\left( \frac{1}{M}
+  \sum_{j=1}^M p_a(y_t^i \mid x^{ij}) \right).
+\end{equation}
+Independent samples $\{x^{ij}\}_{j=1}^M \sim p(x \mid \Ycal_{t-1},
+\Acal_{t-1})$ are required for each action and observation sample to
+ensure estimates are independent, thus increasing sample complexity.
+While the estimator~\eqref{eq:est_margent} is consistent, it is biased
+and the bias decays slowly~\citep{zheng2018robust,
+  rainforth2018nesting}.
+
+\RED{Could make some more precise statements about estimator
+  properties such as the rate at which bias disappears.}

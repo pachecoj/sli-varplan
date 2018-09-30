@@ -194,6 +194,19 @@ def show_bars_topics(lam, W, K):
     plt.subplots_adjust(wspace=0.05, hspace=0.05)
     return (fig_top, axs_top)
 
+def show_single_bars_topic(lam, W, k):
+    """
+    Display a single "bars" topic.
+    """
+    fig = plt.figure()
+    this_lam = n.reshape( lam[k,:], ( int( n.sqrt(W) ), int( n.sqrt(W) ) ) ) / n.sum( lam[k,:] )
+    plt.imshow( this_lam, interpolation="none", cmap="gray" )
+    fig.suptitle('Topic %d' % k)
+    plt.xticks([])
+    plt.yticks([])
+    #plt.tight_layout()
+    return fig
+
 def tv_error(phi_ref, phi_est):
     """
     Compute total variation error and account for label switching
@@ -220,7 +233,6 @@ def align_topics(phi_ref, phi):
     phi_new = phi[col,:]
     tv_err = cost[row,col].sum() / K
     return (phi_new, col, tv_err)
-
 
 def topic_entropy_vec(lam, K):
     H = n.zeros((K,))

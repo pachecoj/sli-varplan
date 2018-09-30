@@ -38,17 +38,17 @@ for m = 1:num_inclus
   fprintf('Performing %i-th measurement (Design + Update) ...\n',m);
   [order(m), scores] = orderfunction(m,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,order);
   
-  % DEBUG
-  if m>20
-    tmp_order = order;
-    tmp_order(m) = 0;
-    [~, scores2] = Select_Designed_Experiment(m,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,tmp_order,20);
-    [~,idx] = sort( scores2, 'descend' );
-    figure;
-    hold on;
-    plot(scores(idx))    
-    keyboard;
-  end  
+%   % DEBUG
+%   if m>20
+%     tmp_order = order;
+%     tmp_order(m) = 0;
+%     [~, scores2] = Select_Designed_Experiment(m,X,U,sitepi,siteb,L,gamma,candU,sigma_noise,tmp_order,20);
+%     [~,idx] = sort( scores2, 'descend' );
+%     figure;
+%     hold on;
+%     plot(scores(idx))    
+%     keyboard;
+%   end  
   
   X = [X,candX(:,order(m))];
   U = [U,candU(:,order(m))];

@@ -91,25 +91,5 @@ def empirical_MI(rng, W, K, Nl, ppi, wordids, gamma, zeta, lam, omega, d, n, Nsa
     Hmarg = - 1/Nsamp * np.sum( logp_marg_all )
     Hcond = - 1/Nsamp * np.sum( logp_cond_all )
 
-    # Hcond = 0.
-    # for i in range(Nsamp):
-    #     psi = psi_samp[...,i]
-    #     y = y_samp[i]
-
-    #     # eval log-prob for p(z, psi^i | y^i)
-    #     logp = np.log( pZcondY[:,y].copy() )
-    #     for k in range(K):
-    #         lam = tau.copy()
-    #         lam[k,wdn] += 1.
-    #         for k_prime in range(K):
-    #             logp[k] += stats.dirichlet.logpdf(psi[k_prime], lam[k_prime])
-
-    #     # compute log p(psi^i | y^i)
-    #     logZ = np.max( logp )
-    #     logp = np.log( np.sum( np.exp( logp - logZ ) ) ) + logZ
-
-    #     # estimate entropy
-    #     Hcond -= 1/Nsamp * logp    
-
     MI = Hmarg - Hcond
     return (MI, rng)        

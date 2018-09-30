@@ -194,8 +194,5 @@ def varinf_hybrid_bound(rng, W, K, Nl, ppi, wordids, gamma, zeta, lam, omega, d,
             lambda_kl = (sum(E_beta_kl - E_beta2_kl)) / (sum(E_beta2_kl - E_beta_kl ** 2)) * E_beta_kl
             Hcond += pY[l] * stats.dirichlet.entropy( lambda_kl )
 
-    import IPython
-    IPython.embed()
-
     MI = Hmarg - Hcond
     return (MI, rng)

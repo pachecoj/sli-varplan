@@ -40,15 +40,10 @@ else
       AMT = calA * M';
       scores(ui) = scores(ui) + 1 / 2 / N_samp * trace( AMT / Lam * AMT' );
     end    
-  end
-
-%   % add marginal entropy
-%   for j = 1:n
-%     scores = scores + n/2 * log( 2*pi*exp(1) ) - 1/2 * log( det( L{j}*L{j}'/sigma_noise/sigma_noise ) );
-%   end      
+  end   
   
   % select index
-  [void,ind] = max(scores);
+  [void,ind] = min(scores);
   ind = poss(ind);
   fprintf('Selected candidate %i with score %g.\n',ind,void);
 end

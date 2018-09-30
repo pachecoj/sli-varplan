@@ -18,10 +18,10 @@
 %\setlength{\pdfpageheight}{11in}
 %\setlength{\pdfpagewidth}{8.5in}
 
-%% % If you use natbib package, activate the following three lines:
-%% \usepackage[round]{natbib}
-%% \renewcommand{\bibname}{References}
-%% \renewcommand{\bibsection}{\subsubsection*{\bibname}}
+% If you use natbib package, activate the following three lines:
+\usepackage[round]{natbib}
+\renewcommand{\bibname}{References}
+\renewcommand{\bibsection}{\subsubsection*{\bibname}}
 
 % If you use BibTeX in apalike style, activate the following line:
 %\bibliographystyle{apalike}
@@ -44,18 +44,44 @@
 
 \twocolumn[
 
-\aistatstitle{Variational Information Planning: Efficient Methods for Approximate Decision Making}
+  \aistatstitle{Variational Information Planning: Efficient Methods for Approximate Decision Making}
+]
 
-\aistatsauthor{ Author 1 \And Author 2 \And  Author 3 }
-
-\aistatsaddress{ Institution 1 \And  Institution 2 \And Institution 3 } ]
+%% \aistatsauthor{ Author 1 \And Author 2 \And  Author 3 }
+%% \aistatsaddress{ Institution 1 \And  Institution 2 \And Institution 3 } ]
 
 \begin{abstract}
-  
+  We consider the planning problem arising from active inference over
+  a latent quantity.  Each stage poses a set of actions which must be
+  evaluated for their potential reduction in posterior uncertainty.  A
+  natural measure of uncertainty reduction is the mutual information
+  (MI), which lacks a closed form for non-trivial models.  We propose
+  an efficient planning mechanism which maximizes a variational lower
+  bound on MI which, when combined with variational inference leads to
+  efficient action selection and posterior updates.  We further
+  characterize optima of the variational planning objective under
+  exponential family approximations and show that optimal bounds arise
+  from moment matching conditions under an augmented distribution.  We
+  demonstrate our approach on three examples from the literature
+  beginning with nonlinear target tracking in a fixed sensor network,
+  gene regulatory network inference, and active learning in a
+  semi-supervised labeled latent Dirichlet allocation (LLDA) model.
 \end{abstract}
 
 \section{Introduction}
 \input{introduction}
+
+\section{Sequential Information Planning}
+\input{infoplan}
+
+\section{Variational Information Planning}
+\input{varplan_content}
+
+%% \section{Optimization for Exponential Families}
+%% \input{optim}
+
+\section{Exponential Family MI Approximation}
+\input{expfamapprox}
 
 \section{Experimental Results}
 \input{experiments}

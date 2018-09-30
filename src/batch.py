@@ -200,32 +200,51 @@ class LLDA_EP:
             # debug
             elif (algname == 'debug'):
 
-                # # compute discriminative variational bound
-                # print('Computing variational bounds...')
-                # if self._numWorkers > 1:
-                #     res = self._pool.map(discvar_plan.run_discvibound_EPLLDA,
-                #       [ (self._rngs[i], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta,
-                #          self._lambda, self._omega, docs, words, self._Nsamp)
-                #          for i, docs, words in zip(range(numTasks),docchunks, wordchunks) ])
-                #     estvar = [ res[i][0] for i in range(numTasks) ]
-                #     self._rngs[0:numTasks] = [ res[i][1] for i in range(numTasks) ]
-                # else:
-                #     estvar, self._rngs[0] = discvar_plan.run_discvibound_EPLLDA((self._rngs[0], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0], self._Nsamp))
-                # print('done.')
-
-                # hybrid variational
+                # compute discriminative variational bound
+                print('Computing variational bounds...')
                 if self._numWorkers > 1:
-                    res = self._pool.map(varmi.run_estMIhybrid_EPLLDA,
-                      [ (self._rngs[i], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docs, words, self._Nsamp)
-                        for i, docs, words in zip(range(numTasks), docchunks, wordchunks) ])
+                    res = self._pool.map(discvar_plan.run_discvibound_EPLLDA,
+                      [ (self._rngs[i], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta,
+                         self._lambda, self._omega, docs, words, self._Nsamp)
+                         for i, docs, words in zip(range(numTasks),docchunks, wordchunks) ])
                     estvar = [ res[i][0] for i in range(numTasks) ]
                     self._rngs[0:numTasks] = [ res[i][1] for i in range(numTasks) ]
                 else:
-                    estvar, self._rngs[0] = varmi.run_estMIhybrid_EPLLDA((self._rngs[0], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0], self._Nsamp))                
+                    estvar, self._rngs[0] = discvar_plan.run_discvibound_EPLLDA((self._rngs[0], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0], self._Nsamp))
+                print('done.')
+
+                
+                # compute discriminative variational bound
+                print('Computing variational bounds...')
+                if self._numWorkers > 1:
+                    res = self._pool.map(discvar_plan_minimal.run_discvibound_EPLLDA,
+                      [ (self._rngs[i], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta,
+                         self._lambda, self._omega, docs, words, self._Nsamp)
+                         for i, docs, words in zip(range(numTasks),docchunks, wordchunks) ])
+                    estvar_min = [ res[i][0] for i in range(numTasks) ]
+                    self._rngs[0:numTasks] = [ res[i][1] for i in range(numTasks) ]
+                else:
+                    estvar_min, self._rngs[0] = discvar_plan_minimal.run_discvibound_EPLLDA((self._rngs[0], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0], self._Nsamp))
+                print('done.')
+
+                
+                # compute conditional Dirichlet bound
+                print('Computing conditional Dirichlet variational bounds...')                
+                if self._numWorkers > 1:
+                    res = self._pool.map(varmi.run_estMIhybrid_EPLLDA,
+                                         [ (self._rngs[i], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docs, words, self._Nsamp)
+                        for i, docs, words in zip(range(numTasks), docchunks, wordchunks) ])
+                    estvar_conddir = [ res[i][0] for i in range(numTasks) ]
+                    self._rngs[0:numTasks] = [ res[i][1] for i in range(numTasks) ]
+                else:
+                    estvar_conddir, self._rngs[0] = varmi.run_estMIhybrid_EPLLDA((self._rngs[0], self._W, self._K, self._Nl, self._ppi, self._wordids, self._gamma, self._zeta, self._lambda, self._omega, docchunks[0], wordchunks[0], self._Nsamp))
+                print('done.')
+                    
+                
 
                 # sample sizes for empirical estimate
                 Nsamp = 100
-                Ntimes = 10
+                Ntimes = 1
 
                 # compute empirical estimates
                 estemp = np.zeros((len(doclist),Ntimes))
@@ -243,13 +262,19 @@ class LLDA_EP:
                 # compute mean / std of empirical
                 mean_estemp = np.mean(estemp, axis=1)
                 std_estemp = np.std(estemp, axis=1)
+                idx = np.argsort(mean_estemp)
+                estvar_conddir = np.concatenate(estvar_conddir).flatten()                
+                estvar_min = np.concatenate(estvar_min).flatten()
+                estvar = np.concatenate(estvar).flatten()
                 
                 # plot stuff
                 import matplotlib.pyplot as plt
-                plt.plot(np.arange(len(doclist)), np.concatenate(estvar).flatten(), '-k', label='Variational')
-                plt.plot(np.arange(len(doclist)), mean_estemp, '-g', label='Empirical')
-                plt.plot(np.arange(len(doclist)), mean_estemp - std_estemp, '--g')
-                plt.plot(np.arange(len(doclist)), mean_estemp + std_estemp, '--g')
+                plt.plot(np.arange(len(doclist)), estvar_conddir[idx], '-b', label='Conditional Dirichlet')          
+                plt.plot(np.arange(len(doclist)), estvar_min[idx], '-m', label='Softmax (Minimal)')
+                plt.plot(np.arange(len(doclist)), estvar[idx], '-k', label='Softmax')
+                plt.plot(np.arange(len(doclist)), mean_estemp[idx], '-g', label='Empirical')
+                plt.plot(np.arange(len(doclist)), mean_estemp[idx] - std_estemp[idx], '--g')
+                plt.plot(np.arange(len(doclist)), mean_estemp[idx] + std_estemp[idx], '--g')
                 plt.xlabel('Word Index')
                 plt.ylabel('Mutual Information')
                 plt.legend()

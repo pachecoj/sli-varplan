@@ -1,0 +1,38 @@
+\RED{Point out that this approach enables more complicated approximating
+distributions for planning, as compared to running EP on samples from
+the predictive distribution}
+
+In recent years much attention has been directed towards approximate
+inference in Bayesian machine learning, particularly for the setting
+where data are static, or arise from a mechanism exogenous to the
+statistical model.  By contrast, comparatively little focus has been
+given to methods which apply the results of inference to generate
+sequential decisions about which data are collected.
+
+Sequential decision making has long been considered in the statistics
+community in the context of Bayesian sequential experiment
+design~\citep{blackwell50, lindley56, bernardo79a}.  A natural utility
+in this setting is mutual information (MI), which measures the
+relative change in posterior uncertainty.  Such statistical
+approaches, however, do not typically address the issue of computing
+MI, which is typically intractable.
+
+Works in experimental design typically assume that the cost of
+experiments far exceed the cost of computation, and therefore rely on
+Markov chain Monte Carlo (MCMC) methods for the inference and planning
+stages.  Moreover, Monte Carlo estimates of MI have been shown to be
+biased due to the use of nested Monte Carlo estimation, and that the
+rate of bias decay can be slow~\citep{zheng2018robust,
+rainforth2018nesting}.
+
+Variational methods offer efficient alternatives for high-throughput
+decision systems~\citep{wainwright_jordan}.  While such methods tend
+to yield good posterior mean approximations, they can produce
+arbitrarily poor estimates of posterior
+uncertainty~\citep{giordano2015linear, turner2011two}.  Naive
+applications of variational approximations for information planning
+will tend to yield poor decisions precisely due to the connection
+between MI and posterior uncertainty.  
+
+
+

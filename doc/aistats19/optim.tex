@@ -1,0 +1,78 @@
+In this section we consider the optimization problem arising from the
+variational lower bound~\eqref{eq:varmi} when $\omega \in \Wcal$ is in
+the exponential family.  Let,
+\begin{equation}
+  \omega_\theta(x \mid y) = h(x)\exp\left( \theta(y)^T \phi(x) - A(\theta(y)) \right),
+\end{equation}
+with natural parameters $\theta(y)$ a function of the conditioning
+variable, sufficient statistics $\phi(x)$, base measure $h(x)$ and
+log-partition function $A(\theta(y))$.  Optimizing~\eqref{eq:varmi} is
+equivalent to minimizing the cross entropy,
+\begin{equation}\label{eq:crossent}
+  \theta^{*} = \argmin_{\theta} J(\theta) \equiv \EE_p[ - \log \omega_{\theta}(X \mid Y) ].
+\end{equation}
+To simplify the discussion, in this section we will drop explicit
+reference to the local approximation $\hat{p}(\cdot)$ and discuss in
+terms of $p(\cdot)$.
+
+We begin by showing that $J(\theta)$ is convex and that its stationary
+point is a variation of the well known moment matching operation
+minimizing Kullback-Leibler divergence over exponential family
+parameters.  We then consider a reformulation of~\eqref{eq:crossent}
+as a constrained optimization and show that for some models this form
+simplifies gradient calculations, stationary point conditions, and
+evaluation of the objective.
+
+% \subsection{Convexity Properties}
+Convexity can be shown by explicit calculation of the Hessian.
+Alternatively, adding \mbox{$\EE_p[ \log p(X \mid Y) ]$} yields the
+following problem which is equivalent to $J(\theta)$, up to constant
+terms,
+%% \begin{align}\label{eq:dual}
+%%   \theta^* &= \argmin_\theta I(X;Y) - \widetilde{I}_{\omega_{\theta}}(X;Y) \\
+%%     &= \argmin_\theta \EE_{p_Y}\left[ \KL{p_{X\mid y}}{\omega_\theta} \mid Y=y \right] \notag
+%% \end{align}
+\begin{equation}\label{eq:dual}
+  \theta^*(y) = \argmin_\theta \EE_{p_Y}\left[ \KL{p_{X\mid y}}{\omega_\theta} \mid Y=y \right]
+\end{equation}
+where, for brevity have introduced the shorthand $p_{x\mid y} \equiv
+p(x\mid y)$.  For any realization $Y=y$ the KL term is convex in
+$\theta(y)$, a well known property of the exponential
+families~\citep{wainwright_jordan}.  \EQN\eqref{eq:dual} is then a
+convex combination of convex functions, thus convexity holds.
+
+The optimal parameter function $\theta^{*}(y)$ is given by the
+stationary point condition,
+\begin{equation}\label{eq:stationary_point}
+  \EE_{p_Y}\left[ \EE_{\omega_{\theta^{*}}}[ \phi(X) \mid Y=y ] \right] = \EE_p[\phi(X)].
+\end{equation}
+This is a weaker condition than the standard moment matching property
+of exponential families, which typically minimizes KL.
+Under~\eqref{eq:stationary_point} moments of $\omega(x\mid y)$ must
+match \emph{in expectation} w.r.t.~the marginal distribution $p(y)$,
+but may not be equal for any particular realization $Y=y$.
+
+%% \begin{gather}
+%%   \omega(X \mid Y = y; \theta) = \exp\left( \theta(y)^T \phi(X) -
+%%     A(\theta(y)) \right) \\
+%%   A(\theta(y)) = \log \int_{\Xcal \times \Ycal} \!\!\!\!\!\exp\left( \theta(y)^T \phi(x) \right)
+%% dx dy
+%% \end{gather}
+
+Stationarity conditions~\eqref{eq:stationary_point} describe are
+stated in terms of an arbitrary parametric function.  Assume
+$\theta_{\eta}(y)$ is a function with parameters $\eta$.  Stationary
+conditions in terms of parameters $\eta$ are,
+\begin{equation*}
+  \EE_{p_Y}\left[ \left( D_\eta \theta \right)^T \EE_{\omega_\eta}[\phi(X)]
+    \right]
+    = \EE_{p_Y}\left[ \left( D_\eta \theta \right)^T \EE_{p_{X\mid
+          Y}}[ \theta(X) ] \right]
+\end{equation*}
+where $D_\eta \theta$ is the Jacobian matrix of partial derivatives.
+If $\theta(y)$ is convex in the parameters $\eta$ then the
+optimization \EQN\eqref{eq:dual} remains convex.  One approach is to
+represent $\theta_{\eta}(y)$ as a neural network, with parameters
+$\eta$.  In this setting, the Jacobian can be efficiently calculated
+for any $y$ via backpropagation.
+

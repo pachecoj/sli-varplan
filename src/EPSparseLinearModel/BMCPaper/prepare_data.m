@@ -40,16 +40,16 @@ for r = 1:rounds
         % create x values by running the SDE, use -Uh because U appears on the lefthand side in U = AX
         [Xh,traj] = sample_data(G,-Uh,data_opt.sigma_noise,data_opt.linear);
         
-        % plot
-        figure('InvertHardcopy','off','Color',[1 1 1]);
-        set(gca,'FontSize',14);
-        plot(traj');
-        xlabel('Time');
-        ylabel('Expression');
-        title('Simulated Gene Expressions');        
-        if any(isnan(Xh(:))),
-            error('Simulation lead to inconsistent values.');
-        end
+%         % plot
+%         figure('InvertHardcopy','off','Color',[1 1 1]);
+%         set(gca,'FontSize',14);
+%         plot(traj');
+%         xlabel('Time');
+%         ylabel('Expression');
+%         title('Simulated Gene Expressions');        
+%         if any(isnan(Xh(:))),
+%             error('Simulation lead to inconsistent values.');
+%         end
     else
         Xh = A \ (Uh + randn(size(Uh))*data_opt.sigma_noise);
     end

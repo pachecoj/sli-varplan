@@ -41,8 +41,8 @@ switch exp_type
         end
         labels = {'LD','LM','LR','GD','GR'};
              
-    case 'debug'
-        rounds = 5; r = []; d = [];
+    case 'varplan'
+        rounds = 20; r = []; d = [];
         dir = 'data/debug';
         sigma_noise = 1e-4;
         %         get_data_opt(name,N, type_input,num_input,nnz_input,num_initial,input_scale,linear,SDE,sigma_noise,  net)
@@ -50,15 +50,15 @@ switch exp_type
 
         for i = 1:length(d)
             % get_run_opt(data_opt,num_inclus,method,initial_rand,tau,eps,sigma_method)            
-%             r = add(r,get_run_opt(d(i), 50,      1,    20,         -1, 0.1, sigma_noise*1.84322));
-%             r = add(r,get_run_opt(d(i), 50,      3,    20,         -1, 0.1, sigma_noise*1.84322));
-%             r = add(r,get_run_opt(d(i), 50,      6,    20,         -1, 0.1, sigma_noise*1.84322));
-            r = add(r,get_run_opt(d(i), 50,      7,    20,         -1, 0.1, sigma_noise*1.84322));              
+            r = add(r,get_run_opt(d(i), 50,      1,    0,         -1, 0.1, sigma_noise*1.84322));
+            r = add(r,get_run_opt(d(i), 50,      3,    0,         -1, 0.1, sigma_noise*1.84322));
+            r = add(r,get_run_opt(d(i), 50,      6,    0,         -1, 0.1, sigma_noise*1.84322));
+%             r = add(r,get_run_opt(d(i), 50,      7,    0,         -1, 0.1, sigma_noise*1.84322));              
         end
-        labels = {'EP','Random','Variational (Affine)','Variational (Linear)'};
+        labels = {'EP (Seeger)','Random','Variational','Variational (Affine)'};
 
     case 'noise'
-        rounds = 50; r = []; d = [];
+        rounds = 5; r = []; d = [];
         dir = 'data/ddnoise';
 
         noises = 10.^(-5:0.5:-2);
@@ -82,7 +82,7 @@ switch exp_type
         for i = 1:length(d)
             %   get_run_opt(data_opt,num_inclus,method,initial_rand,tau,eps,sigma_method)
             r = add(r,get_run_opt(d(i), 50,      1,     0,          taus(i), 0.1,est_sigmas(i)));
-            r = add(r,get_run_opt(d(i), 50,      3,     0,          taus(i), 0.1,est_sigmas(i)));
+            r = add(r,get_run_opt(d(i), 50,      6,     0,          taus(i), 0.1,est_sigmas(i)));
         end
         props = {'Stochastic Noise','SNR'};
 
@@ -112,7 +112,7 @@ switch exp_type
 
 
     case 'inputshape' % this should be the final version
-        rounds = 50; r = []; d = [];
+        rounds = 5; r = []; d = [];
         dir = 'data/ddinputshape';
 
         shapes = [1 2 3 5 20];
@@ -128,7 +128,7 @@ switch exp_type
         for i = 1:length(d)
             %      get_run_opt(data_opt,num_inclus,method,initial_rand,tau,eps,sigma_method)
             r = add(r,get_run_opt(d(i),    50,        1,  0,           -1, 0.1,0.000184322));
-            r = add(r,get_run_opt(d(i),    50,        3,  0,           -1, 0.1,0.000184322));
+            r = add(r,get_run_opt(d(i),    50,        6,  0,           -1, 0.1,0.000184322));
         end
         props = {'Type of Pertubations','Number of Pertubations per Experiment'};
 
@@ -195,27 +195,27 @@ switch action
         set(gca,'Box','on')
         xlim([1 r(1).num_inclus])
         
-%         % ploto area under P-R
-%         figure('InvertHardcopy','off','Color',[1 1 1]);
-% %         subplot(1,1,1)
-%         cla
-%         set(gca,'Fontsize',14);
-%         set(gca,'Xscale','linear','Yscale','linear');
-%         hold on
-%         ww  = 1:size(iAUPRC,2);
-%         myplot(x(:,1),iAUPRC(:,ww),lbAUPRC(:,ww),ubAUPRC(:,ww));
-% %         errorbar(x,iAUC,diAUC,diAUC);
-% 
-%         set(gca,'XTickMode','auto');
-%         set(gca,'XTickLabelMode','auto');
-%         hold off
-%         axis tight
-%         axis([0 r(1).data_opt.N+1 0 1]);
-%         ylabel('iAUPRC');
-%         legend(labels(1:min(length(r),length(labels))),'Location','NorthWest');
-% 
-%         xlabel 'Experiment number'
-%         set(gca,'Box','on')
+        % ploto area under P-R
+        figure('InvertHardcopy','off','Color',[1 1 1]);
+%         subplot(1,1,1)
+        cla
+        set(gca,'Fontsize',14);
+        set(gca,'Xscale','linear','Yscale','linear');
+        hold on
+        ww  = 1:size(iAUPRC,2);
+        myplot(x(:,1),iAUPRC(:,ww),lbAUPRC(:,ww),ubAUPRC(:,ww));
+%         errorbar(x,iAUC,diAUC,diAUC);
+
+        set(gca,'XTickMode','auto');
+        set(gca,'XTickLabelMode','auto');
+        hold off
+        axis tight
+        axis([0 r(1).data_opt.N+1 0 1]);
+        ylabel('iAUPRC');
+        legend(labels(1:min(length(r),length(labels))),'Location','NorthWest');
+
+        xlabel 'Experiment number'
+        set(gca,'Box','on')
 
     case 'plotclass'
         % Produces the bar plots that compare different datasets
@@ -270,9 +270,9 @@ switch action
         xlabel(props{2});
         title(props{1});
         if strcmp(exp_type,'inputshape')
-            legend({'LD','LR'},'Location','Northwest');
+            legend({'EP (Seeger)','Variational'},'Location','Northwest');
         else
-            legend({'LD','LR'});
+            legend({'EP (Seeger)','Variational'});
         end
 
     otherwise
