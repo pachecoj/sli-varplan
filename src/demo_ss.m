@@ -8,7 +8,7 @@
 % J. Pacheco, 2013, 2017
 %
 
-%% NOTES:
+%% NOTES:20
 % * Rename existing "optimal" to "oracle"
 % * "Optimal" Sensor selection using numerical approximation of mutual inf.
 
@@ -33,7 +33,7 @@ alpha = 0.05;      % measurement variance factor
 T = 20;           % # scans
 mu_0 = 0;         % prior mean
 sig_0 = sig_u;    % prior stdev
-N = 20;            % # Monte Carlo samples
+N = 1;            % number of random trials
 Ngrid = 1000;     % # discrete grid points for numerical approx.
 numSensors = 10;      % # of sensor locations
 num_particles = 500;  % # of particle filter particles
@@ -75,7 +75,7 @@ for n=1:N
   log_marg = sum_product_hmm( prior, trans, like_oracle );
   [~,idx] = max( log_marg, [], 1 );  
   mpm_oracle = x_grid(idx);    
-  rms_state(VI_OPT,n) = sqrt(mean((mpm_hmmvi - mpm_opt).^2));
+%   rms_state(VI_OPT,n) = sqrt(mean((mpm_hmmvi - mpm_opt).^2));
     
   % show true marginal
   if N==1
@@ -93,7 +93,7 @@ for n=1:N
     legend('Marginal','True State','MPM','Selection');
     xlabel('Time');
     ylabel('Position');
-    title('Selection: Oracle, Inference: Optimal');
+    title('Selection: Oracle, Inference: Exact');
     ylim([-50 50]);
   end
     
@@ -122,7 +122,7 @@ for n=1:N
     scatter(1:T, loc( Ks_opt ), 'ok')
     xlabel('Time');
     ylabel('Position');
-    title('Selection: MI, Inference: Optimal');
+    title('Selection: Exact MI, Inference: Exact');
     ylim([-50 50]);
   end
     
@@ -150,7 +150,7 @@ for n=1:N
     scatter(1:T, loc( Ks_hmmvi ), 'ok')
     xlabel('Time');
     ylabel('Position');
-    title('Selection: VI, Inference: Optimal');
+    title('Selection: VIP, Inference: Exact');
     ylim([-50 50]);
   end
      
@@ -211,7 +211,7 @@ for n=1:N
     scatter(1:T, loc( Ks_pfmc ), 'ok')
     xlabel('Time');
     ylabel('Position');
-    title('Selection: MCMI, Inference PF');
+    title('Selection: Empirical, Inference PF');
     ylim([-50 50]);
   end
   
@@ -241,7 +241,7 @@ for n=1:N
     scatter(1:T, loc( Ks_pfvi ), 'ok')
     xlabel('Time');
     ylabel('Position');
-    title('Selection: VI, Inference PF');
+    title('Selection: VIP, Inference PF');
     ylim([-50 50]);
   end
   

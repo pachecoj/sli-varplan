@@ -58,7 +58,7 @@ ep_opt = init_ep_opt(...
   1:N, max_iters, conv_thresh, damp_type, min_damp_fact, plot_flag);
 adf_opt = ep_opt;
 adf_opt.max_iters = 1;
-Nsamp = 50;
+Nsamp = 100;
 
 % INIT. OTHER STUFF
 x_grid = linspace(-50, 50, 1000 );
@@ -67,7 +67,7 @@ dx = x_grid(2) - x_grid(1);
 %
 % DO MULTIPLE TRIALS
 %
-Nruns = 1;
+Nruns = 20;
 MI_err_mcmc = zeros(Nsensors,N,Nruns);
 H_cond_err_ep = zeros(Nsensors,N,Nruns);  
 H_cond_err_adf = zeros(Nsensors,N,Nruns);
@@ -241,7 +241,7 @@ for irun = 1:Nruns
   plot(2:N, err_adf(2:N,irun), '-k', 'LineWidth', 1);  
 end
 xlim([2 N])
-legend('MCMC','EP','ADF');
+legend('Empirical','EP','ADF');
 xlabel('Observations');
 ylabel('MI Estimate Error')
 
@@ -265,7 +265,7 @@ plot(2:N, err_mcmc_mean + err_mcmc_std, '--b', 'LineWidth', 1);
 plot(2:N, err_ep_mean + err_ep_std, '--r', 'LineWidth', 1);
 plot(2:N, err_adf_mean + err_adf_std, '--k', 'LineWidth', 1);  
 xlim([2 N])
-legend('MCMC','EP','ADF','STDEV');
+legend('Empirical','EP','ADF','STDEV');
 xlabel('Observations');
 ylabel('MI Estimate Error')
 yl = ylim;
@@ -296,7 +296,7 @@ plot(1:N, err_mcmc_mean_state + err_mcmc_std_state, '--b', 'LineWidth', 1);
 plot(1:N, err_ep_mean_state + err_ep_std_state, '--r', 'LineWidth', 1);
 plot(1:N, err_adf_mean_state + err_adf_std_state, '--k', 'LineWidth', 1);  
 xlim([1 N])
-legend('Random','MCMC','EP','ADF','STDEV');
+legend('Random','Empirical','EP','ADF','STDEV');
 xlabel('Observations');
 ylabel('State Estimate Error')
 yl = ylim;

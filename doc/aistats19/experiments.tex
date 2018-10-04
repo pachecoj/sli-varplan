@@ -1,5 +1,3 @@
-\RED{This section needs a lot of work.  I am still organizing results etc.}
-
 We demonstrate the accuracy and versatility of variational planning in
 three scenarios: estimation in a static sensor network with
 communication constraints, gene regulatory network inference, and
@@ -32,85 +30,115 @@ calculation when possible.
 
 \subsection{Sensor Selection}
 
-Our first example considers the estimation of a target position in a
-static sensor network.  Communication constraints allow measurements
-drawn from only a single sensor at each time.  We begin with
-a stationary target example, where each method aims to estimate
-position with the fewest measurements.  We then demonstrate on a
-moving target with time-evolving nonlinear dynamics.  
+We begin with static and dynamic estimation problems in a network of
+sensors, each with fixed position.  First, we estimate the position of
+a static object, then we consider a moving target with nonlinear
+dynamics.  Due to communication constraints we are able to draw
+measurements from only a single sensor at each time.  We model sensor
+noise as depending on the relative distance to the unknown target;
+sensors further from the target produce less accurate detections.  The
+planning problem in each example is to select the most informative
+sensor.
 
 \subsubsection{Static Estimation}
 
 A stationary target has position drawn from a Gaussian prior $x \sim
-\Ncal(m,\sigma^2)$.  At each time we select one of $K=10$
-sensors from which to observe the target.  Observations are drawn from
-a two-component Gaussian mixture model,
+\Ncal(m,\sigma^2)$.  Observations are drawn from
+one of $K$ sensors, each with fixed position $l_k$.  Sensor noise is
+modeled as a two-component Gaussian mixture model,
 \[
   y \mid x; k \sim w * \Ncal(0, v_0) + (1-w) * \Ncal(x, v_k(x)).
 \]
 The mixture consists of a noise distribution with fixed variance $v_0$
-and an observation model with noise variance \mbox{$v_k(x) = |l_k -
-x| + v_1$} increasing with relative distance to a fixed sensor
-position $l_k$.
+and an observation model with noise variance increasing with relative
+distance: \mbox{$v_k(x) = |l_k - x| + v_1$}.
 
 \begin{figure}
   \begin{tabular}{cc}
-    \hspace{-3mm}\includegraphics[width=0.24\textwidth]{ss_stateerr} &
-    \hspace{-5mm}\includegraphics[width=0.24\textwidth]{ss_MIerr}
+    \hspace{-3mm}\includegraphics[width=0.24\textwidth]{ss_stateerr_maxIters100_Nsamp50_Nruns20.pdf} &
+    \hspace{-5mm}\includegraphics[width=0.24\textwidth]{ss_MI_maxIters100_Nsamp50_Nruns20.pdf}
   \end{tabular}
   
   \caption{\small\textbf{Static target estimation.} Estimation of a 1D
-    target position in a network of $K=10$ equally spaced
-    sensors.  \emph{Left:} Variational planning based on EP inference
-    yields comparable error in state estimate compared to MC
-    estimation with 50 samples. ADF inference yields higher error.
-    All methods outperform random selection.  \emph{Right:} MC
-    estimation produces the most accure MI estimates as compared to
-    numerical calculation, whereas ADF yields higher error due to
-    increased bound gap.}
-  \label{fig:static}
+    target position in a network of $K=10$ equally spaced sensors.
+    Mean (solid) plus STDEV (dashed) over 20 realizations.  \emph{Left:}
+    Variational planning based on EP inference yields comparable error
+    in state estimate compared to exact inference with empirical MI
+    estimates. ADF inference yields higher error.  \emph{Right:}
+    Empirical estimates based on the numerical posterior most
+    accurately estimate MI.  VIP bound gap is consistently lower for
+    more accurate EP posterior estimates as compared to
+    ADF.}  \label{fig:static}
 \end{figure}
-
-We optimize the MI lower bound over a linear Gaussian $\omega(x \mid
-y_t) = \Ncal(Cx,\nu^2)$, which can be solved in closed-form.  To
-compare the impact of inference on planning we consider MCMC, EP and
-assumed density filtering (ADF).  As shown in \FIG\ref{fig:static} we
-find that quality of the posterior approximation impacts quality of
-both the state estimate (\emph{left}) and selected actions
-(\emph{right}).  While ADF is more computationally efficient and
-numerically stable than EP, it tends to produce less accurate
-posterior estimates.  Variational planning based on the EP posterior
-yields state estimates on-par with MCMC, though the latter produces
-better quality MI estimates in this low-dimensional example.
 
 \subsubsection{Dynamical System}
 
-Extending the above analysis to a dynamical system with, we consider a
-nonlinear dynamics frequently used in the sequential Monte Carlo
-literature~\citep{kitagawa1996monte, gordon1993novel,
+\begin{figure*}[!t]
+  \centering
+  \hspace{-3mm}
+  \includegraphics[width=0.9\textwidth]{tracking_single}
+  \vspace{-3mm}
+  \caption{\small\textbf{Nonlinear tracking example} in a field of
+    $K=10$ equally spaced, stationary, sensors.  The most informative
+    comparison is to the optimal result, exact MI planning based on
+    the exact posterior, computed by numerical approximation.  We have
+    also included an \emph{oracle} which selects the sensor closest to
+    the true target location, for reference.  In typical cases such as
+    this one, we see that VIP state error is comparable to empirical
+    estimation under the same posterior approximation.  However, VIP
+    shows lower accuracy when planning is computed against an
+    approximate posterior, in this case particle filtering (PF).}
+  \label{fig:ep}
+\end{figure*}
+
+We extend the setting above to a dynamical system with nonlinear
+dynamics $p(x_t\mid x_{t-1})$ frequently used in the sequential Monte
+Carlo literature~\citep{kitagawa1996monte, gordon1993novel,
 cappe2007overview},
 \[
   \Ncal\left(0.5 x_{t-1} + 25 x_{t-1} / (1+x_{t-1}^2)
   + 8 \cos(1.2t), \sigma_u^2\right).
 \]
-Observations are again drawn from one of $K=10$ sensors at each time
-with nonlinear Gaussian noise,
-\[
-  y_t \mid x_t; k \sim \Ncal(x_t^2/20, v_{tk}(x_t))
-\]
-with variance $v_{tk}(x_t)$ identical to the preceding example.
-Continuing our analysis of the static case, we compare exact inference
-with a particle filter under, both, variational and Monte Carlo
-planning strategies.
+To keep consistent with prior work we model observations
+as, \mbox{$y_t \mid x_t; k \sim \Ncal(x_t^2/20, v_{tk}(x_t))$}.  The
+variance function $v_{tk}(x_t)$ is identical to our static example.
+To demonstrate flexibility additionally replace variational inference
+with a particle filter.  \FIG\ref{fig:tracking_single} demonstrates an
+example scenario.
 
-Results in \FIG\ref{fig:dynamic} report squared error of the state
-estimate, relative to truth, and squared error of the selected sensor
-relative to the sensor closest to the target.  The latter is
-a reasonable baseline since sensor noise is driven by relative
-distance.  While exact inference with variational planning is best
-overall, we find comparable planning results between Monte Carlo
-estimation (MCMI) and variational when particle filter inference is
-used.
+\subsubsection{Results}
+
+In both models we optimize the MI lower bound over a linear Gaussian
+approximation $\omega(x \mid y_t)$, which can be solved in
+closed-form.  We compare the impact of inference on predictive
+accuracy by comparing exact numerical calculation, variational
+inference, and MCMC.
+
+\textbf{State predictions competitive with empirical.}  In both cases
+we find that VIP produces state estimates with similar or better
+accuracy to empirical planning, depending on the chosen posterior
+approximation.  In the static estimation model we find similar
+accuracy between exact numerical inference with empirical planning and
+EP inference with VIP planning (\FIG\ref{fig:static}; left).  In the
+tracking model we also consider exact inference with VIP planning, for
+which median error is lowest.  When comparing particle filter
+inference VIP and empirical planning accuracy are comparable, with the
+former showing slightly lower median error (\FIG\ref{fig:dynamic};
+left).
+
+\textbf{Planning is sensitive to posterior accuracy.}  We also find
+that estimates of the state estimate, and of the MI calculation, are
+sensitive to accuracy of the posterior approximation.  In the static
+case we compare against assumed density filtering (ADF), which is more
+numerically stable than EP but tends to produce less accurate
+posterior approximations.  Planning based on the ADF posterior
+produces less accurate state estimates (\FIG\ref{fig:static}; left)
+and higher error MI estimates (\FIG\ref{fig:static}; right).
+Similarly, use of particle filter inference in the tracking model
+increases error for both the state (\FIG\ref{fig:dynamic}; left) and
+MI calculation (\FIG\ref{fig:dynamic}; right).
+
+
 
 \begin{figure}
   \begin{tabular}{cc}
@@ -131,71 +159,97 @@ used.
 \end{figure}
 
 
-\begin{figure*}[!t]
-  \centering
-  \hspace{-3mm}
-  \includegraphics[width=0.9\textwidth]{tracking_single}
-  \vspace{-3mm}
-  \caption{\small\textbf{Nonlinear state-space example.} Random instance
-    showing estimates for various inference and planning methods.}
-  \label{fig:ep}
-\end{figure*}
 
 
 
 \subsection{Gene Regulatory Network}
-\RED{I will likely push this experiment into a supplement. Results do
-  not show a strong improvement over the previously published
-  approach.}
 
-Next, we adopt the sparse linear model considered
-by~\cite{steinke2007experimental} and~\cite{seeger2008bayesian} to
-demonstrate variational planning for inferring gene regulatory
-networks.  Let $x\in\RR^n$ represent the deviation of gene expression
-levels from steady state for $n=50$ genes.  The matrix
-$A\in\RR^{n\times n}$ represents a directed network of interactions,
-with sparse entries drawn independently from a Laplace distribution.
+Next, we demonstrate VIP for Bayesian experimental design in the
+discovery of causal gene interactions.  Specifically, we develop our
+approach for the sparse linear model of \cite{steinke2007experimental,
+  seeger2008bayesian}.
+
+Let $x\in\RR^n$ represent the deviation of $n$ gene expression levels
+from steady state.  The matrix $A\in\RR^{n\times n}$ represents causal
+interactions, with sparse entries drawn independently from a Laplace
+distribution.  The model is,
 \begin{equation}\label{eq:sparselin}
   \!\!\!p(A,x) \propto \prod_{i=1}^n \Ncal(u_i \mid a_i^T
     x, \sigma^2) \prod_{j=1}^n \textrm{Laplace}(a_{ij} \mid \lambda) 
 \end{equation}
 where $a_i$ is the $i^{\text{th}}$ row of matrix $A$.  Here $u$
-represents an external control vector (perturbation). Observe that the
+represents an external control vector (perturbation).  Interventions
+include up regulating $u_i>0$, down regulation $u_i<0$ and no
+intervention $u_i=0$ for the $i^{\text{th}}$ gene.  Observe that the
 joint~\eqref{eq:sparselin} is defined up to normalization since the
 likelihood term is not a normalized distribution of $x$.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.35\textwidth]{sparselin_iAUC_N100_norandom_run20_norepeats}
-  \caption{\small\textbf{Sparse linear model.} Area under the curve
-  for true edges with weights $|a_{ij}|>0.1$ plotted for each
-  intervention experiment.  Variational planning shows moderate
-  improvement over~\citep{seeger2008bayesian} for less than 25
-  experiments, and is on par thereafter.}
+  \begin{tabular}{cc}
+    \hspace{-3mm}\includegraphics[width=0.24\textwidth]{sparselin_iAUC_N100_norandom_run20_norepeats} &
+    \hspace{-3mm}\includegraphics[width=0.22\textwidth]{sparselin_noise_N100_norandom_run20_norepeats}
+  \end{tabular}
+  \caption{\small\textbf{Sparse linear model.} Average +/- STDEV
+    computed for $n=50$ nodes over 20 random networks.  \emph{Left:}
+    AUC for edges with true weights $|a_{ij}|>0.1$ plotted for each
+    intervention experiment.  VIP shows similar results to Steinke and
+    Seeger with slight improvement for less than 25 experiments.
+    \emph{Right:} Average AUC at varying noise levels are broadly
+    similar to Steinke and Seeger. The dip at moderate SNR levels may
+    be due to our choice of a simple approximating family (linear
+    Gaussian).}
   \label{fig:sparselin}
 \end{figure}
 
-We use the EP implementation provided by~\cite{seeger2008bayesian},
-which maintains a mean field Gaussian posterior
-approximation, \mbox{$q(A) = \prod_i
-p_i^{(0)}(a_i) \prod_j \widetilde{t}_{ij}(a_{ij})$}.  Here,
-$p^{(0)}_i(a_i)$ approximates the base measure \mbox{$N(u_i \mid a_i^T
-x, \sigma^2)$} and \mbox{$\widetilde{t}_{ij}(a_{ij})$} approximate Laplace
-factors.
+As exact inference is infeasible, we instead compare to the method
+developed in \cite{steinke2007experimental, seeger2008bayesian}, which
+maintains a mean field Gaussian posterior approximation using EP,
+\mbox{$q(A) = \prod_i p_i^{(0)}(a_i) \prod_j
+  \widetilde{t}_{ij}(a_{ij})$}.  Here, $p^{(0)}_i(a_i)$ approximates
+the base measure \mbox{$N(u_i \mid a_i^T x, \sigma^2)$} and
+\mbox{$\widetilde{t}_{ij}(a_{ij})$} the Laplace factors.
 
-The previous authors introduce a planning heuristic by noting that,
-given a control and corresponding observation $\{x_*,u_*\}$,
-maximizing MI is equivalent to,
-\begin{equation}\label{eq:max_kl}
-  \max_{u_*} \; \EE_{x_*}\!\left[\, \KL{q'}{q} \,\right].
-\end{equation}
-Here $q'(A) \approx p(A \mid D \cup \{x_*,u_*\})$ is the posterior
-approximation with inclusion of the new data.  Expectation is over the
-approximate posterior predictive distribution, which cannot be
-expressed in closed form, but can be sampled.
-Computing~\eqref{eq:max_kl} requires full updates to the EP posterior
-for each data sample, which is prohibitive.  The authors instead
-propose to only update the base measure $p^{(0)}$.
+Given past observations $\Dcal$ and a new control and observation pair
+$\{x_*,u_*\}$, maximizing MI is (approximately) equivalent to
+maximizing \mbox{$\EE_{x_*}\!\left[\, \KL{q'}{q} \,\right]$},
+%% \begin{equation}\label{eq:max_kl}
+%%   \max_{u_*} \; \EE_{x_*}\!\left[\, \KL{q'}{q} \,\right],
+%% \end{equation}
+where approximation comes from the update posterior \mbox{$q'(A)
+  \approx p(A \mid \Dcal \cup \{x_*,u_*\})$}.  The previous authors
+approximate expectation over samples $\{x_{*}^{k}\}$ from the
+predictive distribution $p(x_{*} \mid \Dcal, u_{*})$.  Since this
+approach requires updating the EP posterior $q'(A)$ for each sample
+$x_{*}^k$, which is prohibitive, they instead propose a
+non-iterative approximation which only updates the Gaussian base measure
+$p^{(0)}(A)$ at each sample.
+
+\textbf{Similar results to specialized method.} We optimize the MI
+bound over a linear Gaussian approximation for 20 random trials and
+report area under the curve (AUC) for edge prediction
+(\FIG\ref{fig:sparselin}; left).  Steinke and Seeger approximate MI by
+updating only the base measure $p^{(0)}$, which involves a moment
+matching projection $\EE_{q'}[ \phi(A) ] = \EE_{\hat{p}}[ \phi(A) ]$,
+where $\hat{p}(A)$ is the augmented distribution, which is similar to
+the moment matching solution discussed in \SEC\ref{sec:moment_match}.
+As a result, VIP reduces to a solution similar to that of Steinke and
+Seeger, and results are comparable for more than 30 interventions.
+Results remain similar across varying noise levels
+(\FIG\ref{fig:sparselin}; right), albeit with a slight drop in
+accuracy at moderate SNR.  We hypothesize that this intermediate
+region depends more strongly on good MI approximations, and that VIP
+would benefit from a more flexible approximating distribution than the
+linear Gaussian one chosen.
+
+
+\textbf{Improved AUC for fewer interventions.}  Despite similarity in
+the methods, we do observe small improvements at early interventions.
+In particular, Steinke and Seeger observe that their proposed
+experimental design approach performs poorly for few interventions and
+propose a hybrid method which randomly selects the first 20
+interventions, then performs information guided selection thereafter.
+Random selection still performs well in this regime.
 
 %% which matches
 %% moments of $q^{'}$ to those of.  Specifically, the
@@ -212,37 +266,22 @@ propose to only update the base measure $p^{(0)}$.
 %% %%   q' \Leftrightarrow \argmin_{q'} \KL{}{q'}
 %% %% \]
 
-We demonstrate our approach for 20 random networks, each with $n=50$
-nodes.  The variational MI bound is optimized in closed-form for a
-linear Gaussian approximation $\omega(a_i \mid x)
-= \Ncal(Fx, \lambda^2 I)$ on each row.  Following the original
-analysis, we present results using a variation of area under the curve
-(iAUC) which scores prediction of \emph{strong} edges, specifically
-those with true weight $|a_{ij}| > 0.1$.
+\subsection{Active Learning for Labeled LDA}\label{sec:llda}
 
-prediction results in \FIG\ref{fig:sparselin}
-
-\subsection{Labeled LDA}\label{sec:llda}
-
-%% \begin{figure*}
-%%   \begin{minipage}{0.4\textwidth}
-%%     \includegraphics[width=1.0\textwidth]{llda_tverr}
-%%   \end{minipage}
-%%   \begin{minipage}{0.6\textwidth}
-%%     \begin{tabular}{cccc}
-%%       \hspace{-8mm}\includegraphics[width=0.35\textwidth]{llda/Gibbs_iter0} &
-%%       \hspace{-12mm}\includegraphics[width=0.35\textwidth]{llda/Gibbs_iter2} &
-%%       \hspace{-12mm}\includegraphics[width=0.35\textwidth]{llda/Gibbs_iter4} &
-%%       \hspace{-12mm}\includegraphics[width=0.35\textwidth]{llda/Gibbs_iter8} \\
-      
-%%       \hspace{-8mm}\includegraphics[width=0.35\textwidth]{llda/Variational_iter0} &
-%%       \hspace{-12mm}\includegraphics[width=0.35\textwidth]{llda/Variational_iter2} &
-%%       \hspace{-12mm}\includegraphics[width=0.35\textwidth]{llda/Variational_iter4} &
-%%       \hspace{-12mm}\includegraphics[width=0.35\textwidth]{llda/Variational_iter8}
-%%     \end{tabular}
-%%   \end{minipage}
-%%   \caption{\small\textbf{Labeled LDA.} Blah.}
-%% \end{figure*}
+\begin{figure*}
+  \begin{tabular}{cccc}
+    \includegraphics[width=0.24\textwidth]{llda/Gibbs_iter0} &
+    \includegraphics[width=0.24\textwidth]{llda/Gibbs_iter8} &
+    \includegraphics[width=0.24\textwidth]{llda/Gibbs_iter4} &
+    \includegraphics[width=0.24\textwidth]{llda/Gibbs_iter8} \\
+    
+    \includegraphics[width=0.24\textwidth]{llda/Variational_iter0} &
+    \includegraphics[width=0.24\textwidth]{llda/Variational_iter2} &
+    \includegraphics[width=0.24\textwidth]{llda/Variational_iter4} &
+    \includegraphics[width=0.24\textwidth]{llda/Variational_iter8}
+  \end{tabular}
+  \caption{\small\textbf{Labeled LDA.} Blah.}
+\end{figure*}
 
 \begin{figure}
   \centering

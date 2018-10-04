@@ -4,7 +4,7 @@ Consider a model of latent variables $x$ and observations $\Ycal_{t-1}
 likelihood, denoted \mbox{$p_{a_{t-1}}(y_{t-1} \mid x)$}.  Given
 observations $\Ycal_{t-1}$ and actions $\actionset_{t-1} =
 \{a_1,\ldots,a_{t-1}\}$ the posterior is:
-\begin{equation}\label{eq:joint}
+\begin{equation}\label{eq:conditional_indep_joint}
   p(x\mid \Ycal_{t-1}; \actionset_{t-1}) \propto p(x)
     \prod_{i=1}^{t-1} p_{a_i}(y_i \mid x) 
 \end{equation}

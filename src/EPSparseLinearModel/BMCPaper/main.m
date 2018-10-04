@@ -58,7 +58,7 @@ switch exp_type
         labels = {'EP (Seeger)','Random','Variational','Variational (Affine)'};
 
     case 'noise'
-        rounds = 5; r = []; d = [];
+        rounds = 20; r = []; d = [];
         dir = 'data/ddnoise';
 
         noises = 10.^(-5:0.5:-2);
@@ -87,7 +87,7 @@ switch exp_type
         props = {'Stochastic Noise','SNR'};
 
     case 'inputscale'
-        rounds = 5; r = []; d = [];
+        rounds = 20; r = []; d = [];
         dir = 'data/ddinputscale';
 
         devs = [1e-3 5e-3 1e-2 5e-2 1e-1 2e-1 5e-1];
@@ -106,13 +106,13 @@ switch exp_type
         for i = 1:length(d)
             % get_run_opt(data_opt,num_inclus,method,initial_rand,tau,eps,sigma_method)
             r = add(r,get_run_opt(d(i), 50,      1,  0,           taus(i), 0.1,est_sigmas(i)));
-            r = add(r,get_run_opt(d(i), 50,      3,  0,           taus(i), 0.1,est_sigmas(i)));
+            r = add(r,get_run_opt(d(i), 50,      6,  0,           taus(i), 0.1,est_sigmas(i)));
         end
         props = {'Pertubation Strength','change in steady state caused by perturbation'};
 
 
     case 'inputshape' % this should be the final version
-        rounds = 5; r = []; d = [];
+        rounds = 20; r = []; d = [];
         dir = 'data/ddinputshape';
 
         shapes = [1 2 3 5 20];
@@ -258,7 +258,7 @@ switch action
             x = x(1:num_compare:end);
         end
 
-        cla
+        figure('InvertHardcopy','off','Color',[1 1 1]);
         subplot(1,1,1)
         set(gca,'Fontsize',25);
         barerrorbar(val,dval);

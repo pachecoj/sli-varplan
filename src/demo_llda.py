@@ -19,16 +19,16 @@ algorithmname = 'llda_ep'  # 'llda_ep' or 'llda_gibbs'
 # empirical - Estimate local variational approximation with approximate posterior samples
 # hybrid - variational bound on conditional entropy and empirical estimate of marginal
 # debug - For debugging
-sel_algorithmname = 'debug'
+sel_algorithmname = 'discvar'
 
 # OTHER OPTIONS
 datadir = '../data/'
 corpus = 'SPARSEBARS'
-code = 'DEBUG'
-numinit = 1
+code = 'COUNT_SEL'
+numinit = 150
 max_iters = 100
 threshold = 0.1
-train_steps = 10
+train_steps = 100
 useNewton = False
 Nsamp = 100
 burn = 100
@@ -135,7 +135,7 @@ for run_id in range(Nruns):
         print('Realized Entropy: %0.2f' % np.sum(Hreal[-1]))
         sio.savemat(this_resfile, {'Hcond':Hcond, 'Hreal':Hreal, 'Hreal_marg':Hreal_marg, 'err':err, 'lambda':lam, 'W':W,
             'K':K, 'max_iters':max_iters, 'threshold':threshold, 'useNewton':useNewton, 'sel_d':sel_d,
-            'sel_n':sel_n, 'corpus':corpus})
+            'sel_n':sel_n, 'corpus':corpus, 'training_wordids':training_wordids, 'labels_all':labels_all})
 
     # done
     print('Saved %s' % this_resfile)
