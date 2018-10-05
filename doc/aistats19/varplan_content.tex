@@ -26,14 +26,15 @@
 For any valid distribution $\omega(x\mid y)$, the following is a lower
 bound on MI,
 \begin{equation}\label{eq:varmi}
-  I(X;Y) \geq H(X) + \EE_p[ \log \omega(X\mid Y) ] \equiv \widetilde{I}(X;Y).
+  I(X;Y) \geq H(X) + \EE_p[ \log \omega(X\mid Y) ].
 \end{equation}
 This well-known bound is a result of Gibbs' inequality.  It has been
 independently explored for channel coding~\citep{agakov2004algorithm},
 reinforcement learning~\citep{mohamed2015variational}, and feature
 selection~\citep{gao2016variational, chen2018learning}.
-Unfortunately, we cannot directly apply the $\widetilde{I}(X;Y)$
-since, in our setting, it involves posterior expectations.
+Unfortunately, we cannot directly apply the bound in
+\EQN\eqref{eq:varmi} since, in our setting, it involves posterior
+expectations.
 
 In this section we describe one approach to bounding MI for sequential
 planning, which involves a series of approximations.  First, given
@@ -80,7 +81,7 @@ $\hat{p}(\cdot)$, not MI under the true posterior.  To ensure that MI
 under $\hat{p}(\cdot)$ is a reliable surrogate for posterior MI,
 $q(x)$ must accurately approximate the posterior.
 
-\subsection{Annotation Models}
+\subsection{Annotation Models}\label{sec:annotation}
 
 The conditionally independent model of the previous section is a
 simple model chosen for illustrative purposes.  We now consider a

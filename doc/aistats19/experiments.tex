@@ -1,32 +1,11 @@
-We demonstrate the accuracy and versatility of variational planning in
-three scenarios: estimation in a static sensor network with
-communication constraints, gene regulatory network inference, and
-active learning for the labeled LDA model.  In each case we compare
-variational planning on each model as compared to Monte Carlo
-estimation, heuristics based on EP approximations, or exact
-calculation when possible.  
-
-%% first, we
-%% consider target state estimation in a static sensor network, where
-%% measurements are generated from a single sensor at each time.  Next,
-%% we explore gene regulatory network under a sparse linear model.
-%% Finally, we apply variational planning to topic modeling under the
-%% LLDA model.
-
-%% For
-%% location dependent observation noise we see that MI based selection
-%% leads to drawing measurements closest to the predicted target
-%% location.
-
-%% While sharing both approaches share
-%% identical EP inference, our planning phase is based on a valid lower
-%% bound to MI, whereas the previous approaches use heuristic steps to
-%% update the local posterior approximation.
-
-%% Unlike
-%% previous models this one contains several nuisance parameters which
-%% must be marginalized out, thus increasing sample-complexity for Monte
-%% Carlo based estimates of the MI objective.
+We demonstrate VIP in a variety of contexts including sensor
+selection, Bayesian experiment design, and active learning.  The
+comparison in each setting is to MCMC inference, or exact numerical
+inference when possible, along with empirical mean estimation of the
+MI for planning.  In this way, our motivation is to demonstrate
+comparable accuracy using more efficient variational methods.  For the
+more complex case of LLDA we in fact observe sustained improvements
+over baseline.
 
 \subsection{Sensor Selection}
 
@@ -40,12 +19,10 @@ sensors further from the target produce less accurate detections.  The
 planning problem in each example is to select the most informative
 sensor.
 
-\subsubsection{Static Estimation}
-
-A stationary target has position drawn from a Gaussian prior $x \sim
-\Ncal(m,\sigma^2)$.  Observations are drawn from
-one of $K$ sensors, each with fixed position $l_k$.  Sensor noise is
-modeled as a two-component Gaussian mixture model,
+\textbf{Static Estimation.}  A stationary target has position drawn
+from a Gaussian prior $x \sim \Ncal(m,\sigma^2)$.  Observations are
+drawn from one of $K$ sensors, each with fixed position $l_k$.  Sensor
+noise is modeled as a two-component Gaussian mixture model,
 \[
   y \mid x; k \sim w * \Ncal(0, v_0) + (1-w) * \Ncal(x, v_k(x)).
 \]
@@ -71,8 +48,6 @@ distance: \mbox{$v_k(x) = |l_k - x| + v_1$}.
     ADF.}  \label{fig:static}
 \end{figure}
 
-\subsubsection{Dynamical System}
-
 \begin{figure*}[!t]
   \centering
   \hspace{-3mm}
@@ -88,13 +63,13 @@ distance: \mbox{$v_k(x) = |l_k - x| + v_1$}.
     estimation under the same posterior approximation.  However, VIP
     shows lower accuracy when planning is computed against an
     approximate posterior, in this case particle filtering (PF).}
-  \label{fig:ep}
+  \label{fig:tracking_single}
 \end{figure*}
 
-We extend the setting above to a dynamical system with nonlinear
-dynamics $p(x_t\mid x_{t-1})$ frequently used in the sequential Monte
-Carlo literature~\citep{kitagawa1996monte, gordon1993novel,
-cappe2007overview},
+\textbf{Dynamical System.} We extend the setting above to a dynamical
+system with nonlinear dynamics $p(x_t\mid x_{t-1})$ frequently used in
+the sequential Monte Carlo literature~\citep{kitagawa1996monte,
+  gordon1993novel, cappe2007overview},
 \[
   \Ncal\left(0.5 x_{t-1} + 25 x_{t-1} / (1+x_{t-1}^2)
   + 8 \cos(1.2t), \sigma_u^2\right).
@@ -107,12 +82,11 @@ with a particle filter.  \FIG\ref{fig:tracking_single} demonstrates an
 example scenario.
 
 \subsubsection{Results}
-
-In both models we optimize the MI lower bound over a linear Gaussian
-approximation $\omega(x \mid y_t)$, which can be solved in
-closed-form.  We compare the impact of inference on predictive
-accuracy by comparing exact numerical calculation, variational
-inference, and MCMC.
+In both models, static and dynamic, we optimize the MI lower bound
+over a linear Gaussian approximation $\omega(x \mid y_t)$, which can
+be solved in closed-form.  We compare the impact of inference on
+predictive accuracy by comparing exact numerical calculation,
+variational inference, and MCMC.
 
 \textbf{State predictions competitive with empirical.}  In both cases
 we find that VIP produces state estimates with similar or better
@@ -140,7 +114,7 @@ MI calculation (\FIG\ref{fig:dynamic}; right).
 
 
 
-\begin{figure}
+\begin{figure}[t]
   \begin{tabular}{cc}
     \hspace{-3mm}\includegraphics[width=0.23\textwidth]{tracking_state_err} &
     \hspace{-3mm}\includegraphics[width=0.23\textwidth]{tracking_sensor_err}
@@ -184,7 +158,7 @@ intervention $u_i=0$ for the $i^{\text{th}}$ gene.  Observe that the
 joint~\eqref{eq:sparselin} is defined up to normalization since the
 likelihood term is not a normalized distribution of $x$.
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \begin{tabular}{cc}
     \hspace{-3mm}\includegraphics[width=0.24\textwidth]{sparselin_iAUC_N100_norandom_run20_norepeats} &
@@ -268,22 +242,46 @@ Random selection still performs well in this regime.
 
 \subsection{Active Learning for Labeled LDA}\label{sec:llda}
 
-\begin{figure*}
-  \begin{tabular}{cccc}
-    \includegraphics[width=0.24\textwidth]{llda/Gibbs_iter0} &
-    \includegraphics[width=0.24\textwidth]{llda/Gibbs_iter8} &
-    \includegraphics[width=0.24\textwidth]{llda/Gibbs_iter4} &
-    \includegraphics[width=0.24\textwidth]{llda/Gibbs_iter8} \\
+%% \begin{figure*}
+%%   \begin{tabular}{cccc}
+%%     \includegraphics[width=0.24\textwidth]{llda/Gibbs_iter0} &
+%%     \includegraphics[width=0.24\textwidth]{llda/Gibbs_iter8} &
+%%     \includegraphics[width=0.24\textwidth]{llda/Gibbs_iter4} &
+%%     \includegraphics[width=0.24\textwidth]{llda/Gibbs_iter8} \\
     
-    \includegraphics[width=0.24\textwidth]{llda/Variational_iter0} &
-    \includegraphics[width=0.24\textwidth]{llda/Variational_iter2} &
-    \includegraphics[width=0.24\textwidth]{llda/Variational_iter4} &
-    \includegraphics[width=0.24\textwidth]{llda/Variational_iter8}
+%%     \includegraphics[width=0.24\textwidth]{llda/Variational_iter0} &
+%%     \includegraphics[width=0.24\textwidth]{llda/Variational_iter2} &
+%%     \includegraphics[width=0.24\textwidth]{llda/Variational_iter4} &
+%%     \includegraphics[width=0.24\textwidth]{llda/Variational_iter8}
+%%   \end{tabular}
+%%   \caption{\small\textbf{Labeled LDA.} Blah.}
+%% \end{figure*}
+
+\begin{figure*}
+  \begin{tabular}{ccc}
+    \hspace{-3mm}\includegraphics[width=0.32\textwidth]{llda/topics_random_runid_5} &
+    \includegraphics[width=0.32\textwidth]{llda/topics_gibbs_runid_5} &
+    \includegraphics[width=0.32\textwidth]{llda/topics_vip_runid_5} \vspace{-3mm}\\
+    {\small\textbf{Gibbs + Random}} & {\small\textbf{Gibbs +
+        Empirical}} & {\small\textbf{EP + VIP}}
   \end{tabular}
-  \caption{\small\textbf{Labeled LDA.} Blah.}
+
+  \caption{\small \textbf{Learned LLDA topics} from a corpus of $D=50$
+    documents, each with $N_d=25$ words drawn from the bars topics
+    with a $W=25$ word vocabulary.  We model Topic 0 as a \emph{rare}
+    topic (see text).  Gibbs estimates are averaged over $1000$
+    samples drawn from parallel chains.  Topic estimates under EP
+    inference with selection using VIP (\emph{right}) are broadly
+    similar to Gibbs when using empirical MI estimates for selection
+    (\emph{center}), though at reduced computational cost.  Gibbs
+    estimates have higher noise in low probability regions.
+    Annotation based on random selection (\emph{left}) performs poorly
+    regardless of the inference method -- Gibbs shown.}
+
+  \label{fig:llda_topics}
 \end{figure*}
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.45\textwidth]{llda/llda_tverr} \vspace{-2mm}
   
@@ -298,7 +296,7 @@ Random selection still performs well in this regime.
   \label{fig:llda_tv}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.45\textwidth]{llda/bound_comparison}
   
@@ -322,60 +320,64 @@ LDA model is given by,
     n=1,\ldots,N_d \\
   w_{dn} \mid z_{dn}, \psi &\sim \text{Cat}(\psi_{z_{dn}}) &&
 \end{align*}
-In addition, LLDA as proposed in~\cite{flaherty2005latent} augments
-the model with semi-supervised annotations for each word.  We model
-annotations as noisy observations of the true topic assignment:
-$y_{dn} \mid z_{dn} \sim \text{Cat}(\pi_{z_{dn}})$.  In this way,
-annotations induce a preferred ordering of topic labels in the posterior.
+LLDA augments the standard LDA model with semi-supervised annotations
+for each word~\citep{flaherty2005latent}.  We model annotations as
+noisy observations of the true topic assignment: \mbox{$y_{dn} \mid
+  z_{dn} \sim \text{Cat}(\pi_{z_{dn}})$}.  In this way, annotations
+induce a preferred ordering of topic labels in the posterior,
+producing interpretable topics.  There are variations on this
+approach~\citep{ramage2009labeled} which model annotations at the
+document level, but we do not consider them here.
 
-We demonstrate our approach on the ``bars''
-dataset~\citep{griffiths2004finding}.  Using a vocabulary of $W=25$
-words, each of the $K=10$ topics places the majority of mass on a
-single column / row when visualized as $5\times 5$ images. The planner
-selects an annotation $y_{d^*n^*}$ maximizing MI of the
-topics,
+We perform active learning, which falls under the annotation model of
+\SEC\ref{sec:annotation}.  At each learning stage $t$, the planner
+selects an annotation $y_{d^*n^*}$ maximizing MI over the topics,
 \begin{equation}
-  (d^*,n^*) = \argmax_{(d,n)} I(\Psi, Y_{dn}).
+  (d^*,n^*) = \argmax_{(d,n)} I(\Psi, Y_{dn} \mid \Wcal, \Ycal_{t-1}),
 \end{equation}
-We demonstrate information theoretic active learning on a corpus of
-$D=50$ documents, each with $N_d=25$ words.  We model a \emph{rare}
-topic by setting a non-symmetric Dirichlet prior on topic proportions:
-$\alpha = (0.05, 1, 1, \ldots, 1)^T$.  A planner should prefer
-annotations for words likely to arise from this rare topic.
+given the observed corpus of words $\Wcal$ and previous annotations
+$\Ycal_{t-1}$.  We demonstrate active learning on the ``bars''
+data~\citep{griffiths2004finding} in which topics can be arranged and
+visualized as a set of vertical and horizontal \emph{bars} (see
+\FIG\ref{fig:llda_topics}).  To amplify the effect of poorly informed
+selections we additionally model a \emph{rare} topic by setting a
+non-symmetric Dirichlet prior on topic proportions: $\alpha = (0.05,
+1, 1, \ldots, 1)^T$.
+
+Empirical MI estimates based on Gibbs samples involve averages across
+independent MCMC chains, and are thus sensitive to topic label
+switching~\citep{stephens2000dealing}.  We found that alignment to any
+individual sample (e.g. MAP) produced poor results, both in terms of
+the posterior mean estimate of the topics as well as entropy
+estimates.  We instead relabel Gibbs samples to minimize absolute
+error w.r.t.~the ground truth topics.  Such an approach would not be
+feasible in typical cases as it requires knowledge of the true topics,
+but represents the best achievable estimate over the given samples.  Our
+variational planning approach does not suffer similar issues as
+samples are drawn from a consistent topic posterior distribution.
 
 \textbf{Lower topic error compared to Monte Carlo.}
 \FIG\ref{fig:llda_tv} reports total variation (TV) error across topics
 $\sum_k \|\psi_k - \hat{\psi}_k\|_1$, based on the posterior mean
-estimate $\hat{\psi}$.  To account for topic label differences we
-solve a bipartite matching to compute the lowest TV error across
-labels.  Increasing MCMC samples from the reported 1000 does not lead
-to significant improvements.  We instead suspect that poor MCMC
-results are due to a combination of MI estimator bias, inference local
-optima, and topic label switching.
+estimate $\hat{\psi}$.  The TV error is invariante to topic ordering
+as we solve a bipartite matching to compute the lowest TV error across
+labels.  Increasing MCMC samples from the reported 1000 samples does
+not lead to significant improvements.  We instead suspect that poor
+MCMC results are due to a combination of MI estimator bias, inference
+local optima, and topic label switching.
 
-\textbf{Topic label switching.}
-Empirical MI estimates based on Gibbs samples involve averages across
-independent MCMC chains, and are thus sensitive to topic label
-switching~\citep{stephens2000dealing}.  We found that alignment to the
-MAP sample, or indeed any individual sample, produced poor results.
-We instead relabel samples to minimize the total variation (TV) error
-w.r.t.~the ground truth topics.  Such an approach would not be
-possible in typical cases as it requires knowledge of the true topics.
-Our variational planning approach does not suffer similar issues as
-samples are drawn from a consistent topic posterior distribution.
-
-\textbf{More flexible approximations lead to better bounds.}
-We begin by exploring the impact of different approximating families
-on the variational MI bound.  \FIG\ref{fig:llda_bound} compares
-variational MI estimates to that of an empirical estimate for three
-approximating families: a conditional Dirichlet, $\omega(\psi \mid
-y=j) = \prod_k \text{Dirichlet}(\psi_k \mid \gamma_{kj})$,
-a \emph{minimal} softmax where class conditionals depend on a single
-topic $\omega(y = k \mid \psi) \propto \exp( w_k^T \text{vec}(\psi_k)
-+ w_{0k} )$, and where class conditionals weight all topics
-$\omega(y = k \mid \psi) \propto \exp( w_k^T \text{vec}(\psi) + w_{0k}
-)$.  We find that the larger parameter set of this final family leads
-to more accurate bounds overall.
+\textbf{More flexible approximations lead to better bounds.}  We
+consider three forms of the auxiliary distribution $\omega(\cdot)$ in
+the MI lower bound: a conditional Dirichlet, $\omega(\psi \mid y=j) =
+\prod_k \text{Dirichlet}(\psi_k \mid \gamma_{kj})$, a \emph{minimal}
+softmax where class conditionals depend on a single topic $\omega(y =
+k \mid \psi) \propto \exp( w_k^T \text{vec}(\psi_k) + w_{0k} )$, and
+where class conditionals weight all topics \mbox{$\omega(y = k \mid
+  \psi) \propto \exp( w_k^T \text{vec}(\psi) + w_{0k}
+  )$}. \FIG\ref{fig:llda_bound} compares variational MI estimates to
+that of an empirical estimate for each of these families.  We find
+that the larger parameter set of this final family leads to more
+accurate bounds overall.
 
 
 %% MI as $I(\Psi,Y_{dn}) \geq H(Y_{dn})

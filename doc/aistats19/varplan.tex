@@ -44,28 +44,28 @@
 
 \twocolumn[
 
-  \aistatstitle{Variational Information Planning: Efficient Methods for Approximate Decision Making}
-]
+  \aistatstitle{Variational Information Planning for Sequential Decision Making} ]
 
 %% \aistatsauthor{ Author 1 \And Author 2 \And  Author 3 }
 %% \aistatsaddress{ Institution 1 \And  Institution 2 \And Institution 3 } ]
 
-\begin{abstract}
-  We consider the planning problem arising from active inference over
-  a latent quantity.  Each stage poses a set of actions which must be
-  evaluated for their potential reduction in posterior uncertainty.  A
-  natural measure of uncertainty reduction is the mutual information
-  (MI), which lacks a closed form for non-trivial models.  We propose
-  an efficient planning mechanism which maximizes a variational lower
-  bound on MI which, when combined with variational inference leads to
-  efficient action selection and posterior updates.  We further
-  characterize optima of the variational planning objective under
-  exponential family approximations and show that optimal bounds arise
-  from moment matching conditions under an augmented distribution.  We
-  demonstrate our approach on three examples from the literature
-  beginning with nonlinear target tracking in a fixed sensor network,
-  gene regulatory network inference, and active learning in a
-  semi-supervised labeled latent Dirichlet allocation (LLDA) model.
+\begin{abstract}  
+  We consider the setting of sequential decision making where, at each
+  stage, potential actions are evaluated based on expected reduction
+  in posterior uncertainty, given by mutual information (MI).  As MI
+  typically lacks a closed form, we propose an approach which
+  maintains variational approximations of, both, the posterior and MI
+  utility.  Our planning objective extends an established variational
+  bound on MI to the setting of sequential planning.  The result,
+  variational information planning (VIP), is an efficient method for
+  sequential decision making.  We further establish convexity of the
+  variational planning objective and, under conditional exponential
+  family approximations, we show that the optimal MI bound arises from
+  a relaxation of the well-known exponential family moment matching
+  property.  We demonstrate VIP for sensor selection, experiment
+  design, and active learning, where it meets or exceeds methods
+  requiring more computation, or those specialized to the 
+  task.
 \end{abstract}
 
 \section{Introduction}
@@ -74,7 +74,7 @@
 \section{Sequential Information Planning}
 \input{infoplan}
 
-\section{Variational Information Planning}
+\section{Variational Information Planning}\label{sec:varplan}
 \input{varplan_content}
 
 \section{Optimization for Exponential Families}\label{sec:optim}

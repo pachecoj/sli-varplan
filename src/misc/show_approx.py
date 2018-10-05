@@ -10,8 +10,8 @@ dx = x[1] - x[0]
 y = np.linspace(-5, 5, num=1000)
 
 # marginal
-m0 = -2.
-m1 = 2. 
+m0 = -1.
+m1 = 1. 
 logp_x = np.log( 0.5 * stats.norm.pdf(x, loc=m0) + 0.5 * stats.norm.pdf(x, loc=m1) )
 logp_x -= np.max(logp_x)
 p_x = np.exp(logp_x) / np.sum(np.exp(logp_x)) / dx

@@ -1,50 +1,69 @@
 Consider a model of latent variables $x$ and observations $\Ycal_{t-1}
 = \{y_1,\ldots,y_{t-1}\}$.  At each time $t-1$ a discrete
 \emph{action} $a_{t-1} \in \{1,\ldots,A\}$ parameterizes the
-likelihood, denoted \mbox{$p_{a_{t-1}}(y_{t-1} \mid x)$}.  Given
-observations $\Ycal_{t-1}$ and actions $\actionset_{t-1} =
-\{a_1,\ldots,a_{t-1}\}$ the posterior is:
+likelihood, denoted \mbox{$p_{a_{t-1}}(y_{t-1} \mid x)$}.  Let
+$\Dcal_{t-1} = \{\Ycal_{t-1},\Acal_{t-1}\}$ be the set of observations
+and chosen actions \mbox{$\actionset_{t-1} =
+\{a_1,\ldots,a_{t-1}\}$} at time $t-1$.  The posterior is then,
 \begin{equation}\label{eq:conditional_indep_joint}
-  p(x\mid \Ycal_{t-1}; \actionset_{t-1}) \propto p(x)
-    \prod_{i=1}^{t-1} p_{a_i}(y_i \mid x) 
+  p(x\mid \Dcal_{t-1}) \propto
+    p(x) \prod_{i=1}^{t-1} p_{a_i}(y_i \mid x)
 \end{equation}
-At time $t$ an action $a_t$ is selected to maximize the posterior
-mutual information \mbox{$I(X;Y_t \mid \Ycal_{t-1}, \Acal_{t-1})$}.
+The goal of sequential information planning is to choose the sequence
+of actions $\Acal$ that minimize entropy of the
+posterior~\eqref{eq:conditional_indep_joint}.  Specifically, at time
+$t$, an action $a_t$ is selected to maximize the posterior mutual
+information,
+\begin{align}\label{eq:post_mi}
+  a_t^{*} &= \argmax_a I(X;Y_t \mid \Dcal_{t-1}) \notag \\
+          &= \argmax_a H(X\mid \Dcal_{t-1}) - H_a(X \mid Y_t, \Dcal_{t-1})
+          %% &= \argmax_a H(X\mid \Dcal_{t-1}) + H_a(Y_t\mid \Dcal_{t-1})
+          %% - H_a(X, Y_t \mid \Dcal_{t-1}).
+\end{align}
 Once an action is selected, new observations are drawn from the
-appropriate likelihood model $y_t \sim p_{a_t}(\cdot \mid x)$ and
-the posterior is updated.
+appropriate likelihood model $y_t \sim p_{a_t}(\cdot \mid x)$ and the
+posterior is updated.
 
-Calculating MI is complicated since the entropy terms require
-expectations under the posterior distribution.  Dropping explicit
-dependence on previous observations $\Ycal_{t-1}$ and actions
-$\Acal_{t-1}$ MI is,
-%% \mbox{$I(X;Y_t \mid \Ycal_{t-1}, \Acal_{t-1})$}. 
-%% \begin{align}
-%%   a_t^{*} &= \argmax_a I_a(X;Y_t \mid \Ycal_{t-1}, \Acal_{t-1}) \\
-%%     &= H(X\mid \Ycal_{t-1}, \Acal_{t-1}) - H_a(X, Y_t \mid
-%%       \Ycal_{t-1}, \Acal_{t-1}). \notag
-%% \end{align}
-\begin{equation}
-  a_t^{*} = \argmax_a H(X) + H_a(Y_t) - H_a(X, Y_t). \notag
-\end{equation}
-The marginal entropy $H(Y_t)$ requires evaluation of the log-posterior
-predictive distribution.  Estimation based on posterior predictive
-samples $\{y^i_t\} \sim p_a(y\mid \Ycal_{t-1}, \Acal_{t-1})$ is
-straightforward.  The empirical plug-in estimate is given by,
+%% We assume in \EQN\eqref{eq:info_plan_obj} that the marginal
+%% entropy \mbox{$H(X\mid \Dcal)$} is invariant to future actions, and
+%% thus can be ignored for planning.
+
+Calculating the posterior MI in \EQN\eqref{eq:post_mi} is complicated
+for two reasons.  First, the entropy terms involve expectations under
+the posterior distribution~\eqref{eq:conditional_indep_joint}.
+Second, calculating the conditional entropy $H(X\mid Y, \Dcal)$ requires
+evaluation of the posterior predictive distribution $p(y\mid \Dcal)$
+as in,
+\[
+  H(X\mid Y, \Dcal) = \EE\left[
+    - \log \frac{p(x,y\mid \Dcal)}{ p(y\mid \Dcal) } \right],
+\]
+where we have dropped explicit indexing on time.  One approach is to
+estimate this over samples \mbox{$\{y^i_t\} \sim
+p_a(y\mid \Dcal_{t-1})$}.  The resulting empirical plug-in estimator
+of MI is,
 %% \begin{equation}\label{eq:emp_mi}
 %%   \hat{I}_a = \frac{1}{N} \sum_{i=1}^N \log \frac{ p_a(y_t^i \mid x^i)
 %%   }{ \frac{1}{M} \sum_{j=1}^M p_a(y_t^i \mid x^{ij}) }.
 %% \end{equation}
 \begin{equation}\label{eq:est_margent}
-  H(Y_t) \approx - \frac{1}{N} \sum_{i=1}^N \log\left( \frac{1}{M}
-  \sum_{j=1}^M p_a(y_t^i \mid x^{ij}) \right).
+  \hat{I}_a \approx - \frac{1}{N} \sum_{i=1}^N \log \frac{
+    p_a(y_t^i\mid x^i) }{\frac{1}{M}
+        \sum_{j=1}^M p_a(y_t^i \mid x^{ij})}.
 \end{equation}
-Independent samples $\{x^{ij}\}_{j=1}^M \sim p(x \mid \Ycal_{t-1},
-\Acal_{t-1})$ are required for each action and observation sample to
-ensure estimates are independent, thus increasing sample complexity.
-While the estimator~\eqref{eq:est_margent} is consistent, it is biased
-and the bias decays slowly~\citep{zheng2018robust,
-  rainforth2018nesting}.
+Independent samples $\{x^{ij}\}_{j=1}^M \sim p(x \mid \Dcal_{t-1})$
+are required for each action, and observation sample, to ensure
+estimates are independent, thus increasing sample complexity.  While
+the estimator~\eqref{eq:est_margent} is consistent, it is biased.
+Moreover, bias is known to decay slowly~\citep{zheng2018robust,
+rainforth2018nesting}.
 
-\RED{Could make some more precise statements about estimator
-  properties such as the rate at which bias disappears.}
+%% %% \mbox{$I(X;Y_t \mid \Ycal_{t-1}, \Acal_{t-1})$}. 
+%% %% \begin{align}
+%% %%   a_t^{*} &= \argmax_a I_a(X;Y_t \mid \Ycal_{t-1}, \Acal_{t-1}) \\
+%% %%     &= H(X\mid \Ycal_{t-1}, \Acal_{t-1}) - H_a(X, Y_t \mid
+%% %%       \Ycal_{t-1}, \Acal_{t-1}). \notag
+%% %% \end{align}
+%% \begin{equation}
+%%   a_t^{*} = \argmax_a H(X) + H_a(Y_t) - H_a(X, Y_t). \notag
+%% \end{equation}

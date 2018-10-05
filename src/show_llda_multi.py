@@ -3,6 +3,8 @@ import numpy as np
 import scipy.io as sio
 import utils
 
+plt.rc('font', size=12)
+
 datadir = '../data/'
 
 files = ('corpus_SPARSEBARS_alg_llda_gibbs_sel_random_numinit_150_trainsteps_100_Nsamp_1000_DISCVAR',
@@ -11,19 +13,19 @@ files = ('corpus_SPARSEBARS_alg_llda_gibbs_sel_random_numinit_150_trainsteps_100
          #'corpus_SPARSEBARS_alg_llda_ep_sel_empirical_numinit_150_trainsteps_100_Nsamp_1000_DISCVAR',
          'corpus_SPARSEBARS_alg_llda_ep_sel_discvar_numinit_150_trainsteps_100_Nsamp_100_DEBUG_DISCVAR_SMALLSAMP',
          )
-names = ('Inf: Gibbs, Plan: (Random, N=1k)',
-         'Inf: Gibbs, Plan: Empirical MI (N=1k)',
-         'Inf: Variational, Plan: Random',
+names = ('Inference: Gibbs, Planning: (Random)',
+         'Inference: Gibbs, Planning: Empirical MI',
+         'Inference: EP, Planning: Random',
          #'Inf: Variational, Plan: Empirical MI (N=1k)',         
-         'Inf: Variational, Plan: MI (N=100)',
+         'Inference: Variational, Planning: VIP',
 )
-colors = ('--b',
+colors = ('--g',
           '-b',
           '--k',
           #'-+k',
           '-k',
 )
-facecolors = ('blue',
+facecolors = ('green',
               'blue',
               'gray',
               #'gray',
@@ -64,7 +66,7 @@ for fname, algname, idx in zip(files, names, range(len(files))):
 
 # decorate figures
 plt.figure( fig_tv.number )
-plt.legend()
+plt.legend(loc='upper right')
 plt.xlabel('Training Epoch')
 plt.ylabel('Topic Error (TV)')
 plt.figure( fig_ent.number )
