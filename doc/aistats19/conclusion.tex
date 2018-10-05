@@ -1,14 +1,20 @@
-We have introduced an approach to sequential decision making (VIP)
+We have introduced VIP, an approach to sequential decision making
 which leverages the efficiency of variational approximations to
-efficiently produce high quality decisions.  VIP avoids the pitfalls
-associated with uncertainty estimates of variational methods, which
-can be quite poor, by decoupling the posterior approximation from the
-auxiliary model used in planning.  We have shown that the optimization
-arising from conditionally exponential family auxiliary models is
-convex in the natural parameters.  For simple auxiliary models this
-convexity often translates into closed-form solutions, resulting in
-high throughput decisions.  Using the same basic methodology we have
-shown that VIP can be easily adapted to a variety of contexts, and
-performs comparably to methods requiring more computation, such as
-MCMC, or to specialized methods in the case of regulatory network
-inference.
+produce high quality decisions at timescales that would be infeasible
+with existing sample-based methods.  Using the same basic methodology
+we have shown that VIP can be easily adapted to a variety of contexts,
+and performs comparably to sample-based approaches requiring more
+computation and to methods specialized for a particular problem, as in
+the regulatory network example.  We look forward to future
+applications of VIP in domains where decisions are time-sensitive.
+
+
+%% By optimizing a lower bound on MI
+%% over an auxiliary model, VIP avoids the pitfalls associated with
+%% uncertainty estimates of variational methods.  We have shown that the
+%% optimization arising from conditionally exponential family auxiliary
+%% models is convex in the natural parameters.  Using the same basic
+%% methodology we have shown that VIP can be easily adapted to a variety
+%% of contexts, and performs comparably to methods requiring more
+%% computation, such as MCMC, or to specialized methods in the case of
+%% regulatory network inference.

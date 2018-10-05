@@ -9,15 +9,14 @@ over baseline.
 
 \subsection{Sensor Selection}
 
-We begin with static and dynamic estimation problems in a network of
-sensors, each with fixed position.  First, we estimate the position of
-a static object, then we consider a moving target with nonlinear
-dynamics.  Due to communication constraints we are able to draw
-measurements from only a single sensor at each time.  We model sensor
-noise as depending on the relative distance to the unknown target;
-sensors further from the target produce less accurate detections.  The
-planning problem in each example is to select the most informative
-sensor.
+We begin with estimating target position in a network of sensors, each
+with fixed position.  Due to communication constraints we can draw
+measurements from only a single sensor at each time.  At each planning
+stage we must draw measurements from the most informative sensor.
+
+%% We model sensor
+%% noise as depending on the relative distance to the unknown target;
+%% sensors further from the target produce less accurate detections.  
 
 \textbf{Static Estimation.}  A stationary target has position drawn
 from a Gaussian prior $x \sim \Ncal(m,\sigma^2)$.  Observations are
@@ -54,15 +53,16 @@ distance: \mbox{$v_k(x) = |l_k - x| + v_1$}.
   \includegraphics[width=0.9\textwidth]{tracking_single}
   \vspace{-3mm}
   \caption{\small\textbf{Nonlinear tracking example} in a field of
-    $K=10$ equally spaced, stationary, sensors.  The most informative
-    comparison is to the optimal result, exact MI planning based on
-    the exact posterior, computed by numerical approximation.  We have
-    also included an \emph{oracle} which selects the sensor closest to
-    the true target location, for reference.  In typical cases such as
-    this one, we see that VIP state error is comparable to empirical
-    estimation under the same posterior approximation.  However, VIP
-    shows lower accuracy when planning is computed against an
-    approximate posterior, in this case particle filtering (PF).}
+    $K=10$ equally spaced, stationary, sensors.  The best comparison
+    is to numerical approximation to MI and the posterior distribution
+    (\emph{top-center}).  For reference, we have also included an
+    \emph{oracle} which selects the sensor closest to the true target
+    location (\emph{left column}).  In typical cases such as this one,
+    we see that VIP state error is comparable to empirical estimation
+    under the same posterior approximation.  However, VIP shows lower
+    accuracy when planning is computed against an approximate
+    posterior, in this case particle filtering (PF).}
+  \vspace{-3mm}
   \label{fig:tracking_single}
 \end{figure*}
 
@@ -89,16 +89,15 @@ predictive accuracy by comparing exact numerical calculation,
 variational inference, and MCMC.
 
 \textbf{State predictions competitive with empirical.}  In both cases
-we find that VIP produces state estimates with similar or better
-accuracy to empirical planning, depending on the chosen posterior
-approximation.  In the static estimation model we find similar
-accuracy between exact numerical inference with empirical planning and
-EP inference with VIP planning (\FIG\ref{fig:static}; left).  In the
-tracking model we also consider exact inference with VIP planning, for
-which median error is lowest.  When comparing particle filter
-inference VIP and empirical planning accuracy are comparable, with the
-former showing slightly lower median error (\FIG\ref{fig:dynamic};
-left).
+VIP produces state estimates with similar or better accuracy to
+empirical planning, depending on the chosen posterior approximation.
+In the static estimation model we find similar accuracy between exact
+numerical inference with empirical planning and EP inference with VIP
+planning (\FIG\ref{fig:static}; left).  In the tracking model we also
+consider exact inference with VIP planning, for which median error is
+lowest.  When comparing particle filter inference VIP and empirical
+planning accuracy are comparable, with the former showing slightly
+lower median error (\FIG\ref{fig:dynamic}; left).
 
 \textbf{Planning is sensitive to posterior accuracy.}  We also find
 that estimates of the state estimate, and of the MI calculation, are
@@ -128,8 +127,9 @@ MI calculation (\FIG\ref{fig:dynamic}; right).
   error quantiles.  \emph{Right:} Again, Exact VI shows the lowest RMS
   error of the selected sensor position w.r.t.~optimal, whereas PFVI
   and MCMI both have higher error, again with PFVI having larger
-  quantiles.}
+  quantiles.}\vspace{-5mm}
   \label{fig:dynamic}
+
 \end{figure}
 
 
@@ -173,6 +173,7 @@ likelihood term is not a normalized distribution of $x$.
     similar to Steinke and Seeger. The dip at moderate SNR levels may
     be due to our choice of a simple approximating family (linear
     Gaussian).}
+  
   \label{fig:sparselin}
 \end{figure}
 
@@ -277,7 +278,7 @@ Random selection still performs well in this regime.
     estimates have higher noise in low probability regions.
     Annotation based on random selection (\emph{left}) performs poorly
     regardless of the inference method -- Gibbs shown.}
-
+  \vspace{-5mm}
   \label{fig:llda_topics}
 \end{figure*}
 
@@ -359,7 +360,7 @@ samples are drawn from a consistent topic posterior distribution.
 \textbf{Lower topic error compared to Monte Carlo.}
 \FIG\ref{fig:llda_tv} reports total variation (TV) error across topics
 $\sum_k \|\psi_k - \hat{\psi}_k\|_1$, based on the posterior mean
-estimate $\hat{\psi}$.  The TV error is invariante to topic ordering
+estimate $\hat{\psi}$.  The TV error is invariant to topic ordering
 as we solve a bipartite matching to compute the lowest TV error across
 labels.  Increasing MCMC samples from the reported 1000 samples does
 not lead to significant improvements.  We instead suspect that poor

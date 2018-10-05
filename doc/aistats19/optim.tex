@@ -1,10 +1,14 @@
-Given the bound~\eqref{eq:varmi_approx}, it remains to optimize 
-the auxiliary $\omega(x\mid y)$, which can be complicated
-for arbitrary distributions.  In this section we consider optimization
-of this bound for conditional distributions in the exponential family.
-We show that the corresponding optimization is convex in the natural
-parameters.  Moreover, stationary conditions yield a variation on the
-well known moment matching property.
+During planning we optimize the bound~\eqref{eq:varmi_approx}, with
+respect to the auxiliary distribution $\omega(x\mid y)$.  This
+optimization can be complicated for arbitrary distributions.  In this
+section we consider the optimization for the class auxiliary
+distribution which are in the exponential family, when conditioned on
+a hypothesized measurement.  This flexible family allows for nonlinear
+dependence on the observation $y$ as illustrated
+in \FIG\ref{fig:approx} (right).  We show that the resulting
+optimization is convex in the exponential family natural parameters.
+Also, optimality conditions yield a relaxation of the moment
+matching property for exponential families.
 
 %% We represent conditional exponential families with natural parameters
 %% that are themselves functions of the conditioning variable $y$.  With
@@ -17,27 +21,28 @@ well known moment matching property.
 
 \subsection{Optimizing the Auxiliary Distribution}
 
-Consider the set of exponential family distributions
+Consider the set of conditional distributions in the exponential family
 $\omega \in \Wcal$ with PDF,
 \begin{equation}
-  \omega_\theta(x \mid y) = h(x)\exp\left( \theta(y)^T \phi(x) - A(\theta(y)) \right),
+  \omega_\theta(x \mid y) = h(x)\exp\left( \theta(y)^T \phi(x,y) - A(\theta(y)) \right),
 \end{equation}
 with natural parameters $\theta(y)$ a function of the conditioning
-variable, sufficient statistics $\phi(x)$, base measure $h(x)$ and
-log-partition function $A(\theta(y))$.
-Optimizing the bound in \EQN\eqref{eq:varmi_approx} is equivalent to minimizing the
-cross entropy,
+variable, sufficient statistics $\phi(x,y)$, base measure $h(x)$ and
+log-partition function $A(\theta(y))$.  Optimizing the bound
+in \EQN\eqref{eq:varmi_approx} is equivalent to minimizing the cross
+entropy,
 \begin{equation}\label{eq:crossent}
-  \theta^{*}(y) = \argmin_{\theta} J(\theta) \equiv \EE_{\hat{p}}[ - \log \omega_{\theta}(X \mid Y) ].
+  \theta^{*}(y) = \argmin_{\theta} J(\theta) \equiv \EE_{\hat{p}}[ - \log \omega_{\theta}(x \mid y) ].
 \end{equation}
 Convexity of $J(\theta)$ can be established by explicit calculation of
-the Hessian.  Alternatively, adding \mbox{$-H(\hat{p})$} yields the
-following problem which is equivalent to $J(\theta)$ up to constant
-terms,
+the Hessian.  Alternatively, by adding \mbox{$-H(\hat{p})$} we have
+the following problem, which is equivalent to $J(\theta)$ up to
+constant terms,
 \begin{equation}\label{eq:dual}
-  \theta^*(y) = \argmin_\theta \EE_{\hat{p}_Y}\left[ \KL{\hat{p}_{X\mid y}}{\omega_\theta} \mid Y=y \right]
+  \theta^*(y) = \argmin_\theta \EE_{\hat{p}_y}\left[ \KL{\hat{p}_{x\mid y}}{\omega_\theta} \right]
 \end{equation}
-For brevity have introduced the shorthand \mbox{$\hat{p}_{x\mid y} \equiv
+For brevity we have introduced the shorthand \mbox{$\hat{p}_{x\mid
+y} \equiv
 \hat{p}(x\mid y)$}.  For any realization $Y=y$ the KL term is convex in
 $\theta(y)$, a well known property of the exponential
 families~\citep{wainwright_jordan}.  \EQN\eqref{eq:dual} is then a
@@ -46,13 +51,13 @@ convex combination of convex functions, thus convexity holds.
 The optimal parameter function $\theta^{*}(y)$ is given by the
 stationary point condition,
 \begin{equation}\label{eq:stationary_point}
-  \EE_{\hat{p}_Y}\left[ \EE_{\omega_{\theta^{*}}}[ \phi(X) \mid Y=y ] \right] = \EE_{\hat{p}}[\phi(X)].
+  \EE_{\hat{p}_y}\left[ \EE_{\omega_{\theta^{*}}}[ \phi(x,y) \mid Y=y ] \right] = \EE_{\hat{p}}[\phi(x,y)].
 \end{equation}
 This is a weaker condition than the standard moment matching property
 of exponential families, which typically minimizes KL.
 Under~\eqref{eq:stationary_point} moments of $\omega(x\mid y)$ must
 match \emph{in expectation} w.r.t.~the marginal distribution $p(y)$,
-but may not be equal for any particular realization $Y=y$.
+but need not be equal for any particular realization $Y=y$.
 
 %% \begin{gather}
 %%   \omega(X \mid Y = y; \theta) = \exp\left( \theta(y)^T \phi(X) -
@@ -68,10 +73,10 @@ function $\theta(y)$ which is assumed to be parametric.  Let $\eta$ be
 parameters of the function, denoted $\theta_{\eta}(y)$.  Stationary
 conditions in terms of parameters $\eta$ are then,
 \begin{equation*}
-  \EE_{p_Y}\left[ \left( D_\eta \theta \right)^T \EE_{\omega_\eta}[\phi(X)]
+  \EE_{p_y}\left[ \left( D_\eta \theta \right)^T \EE_{\omega_\eta}[\phi(x,y)]
     \right]
-    = \EE_{p_Y}\left[ \left( D_\eta \theta \right)^T \EE_{p_{X\mid
-          Y}}[ \theta(X) ] \right]
+    \!= \EE_{p_y}\left[ \left( D_\eta \theta \right)^T \EE_{p_{x\mid
+          y}}[ \theta(x,y) ] \right]
 \end{equation*}
 where $D_\eta \theta$ is the Jacobian matrix of partial derivatives.
 If $\theta(y)$ is convex in the parameters $\eta$ then the

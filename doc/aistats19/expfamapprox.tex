@@ -1,10 +1,11 @@
 The previous section characterized natural parameters maximizing the
-MI bound~\eqref{eq:varmi_approx}.  Planning, however, requires
-evaluation of the optimum.  For some models this is straightforward,
-but others require estimation.  We begin with a discussion of
-computing the bound for complex models.  We conclude with a class of
-models for which evaluation is simple, and corresponds to the
-standard moment matching property.
+MI bound~\eqref{eq:varmi_approx} w.r.t.~the auxiliary distribution.
+Planning, however, requires the value of this bound at its optimum.
+For some models this evaluation is straightforward, but others require
+estimation.  We begin with a discussion of computing the bound for
+complex models.  We conclude with a class of models for which
+evaluation is simple, and corresponds to the standard moment matching
+property.
 
 \subsection{Bound Estimation}
 
@@ -15,24 +16,26 @@ standard moment matching property.
 %% this purpose.  More complicated functions, however, require estimation
 %% of the bound.
 
-Let us focus on the conditionally independent model with
-PDF~\eqref{eq:conditional_indep_joint}.  Recall the local
+To simplify the discussion, we focus on the conditionally independent
+model with PDF~\eqref{eq:conditional_indep_joint}.  Recall the local
 approximation $\hat{p}(x,y) = q(x)p(y\mid x)$, where we drop explicit
-time indexing for brevity.  The relevant term
-in the bound~\eqref{eq:varmi_approx} is the negative conditional cross
+time indexing for brevity.  The relevant term in the
+bound~\eqref{eq:varmi_approx} is the conditional cross
 entropy,
-\begin{equation}
-  \EE_{\hat{p}}[ \log \omega(X \mid Y)
-  ] \approx \frac{1}{N} \sum_{i=1}^N \EE_{\hat{p}_{Y \mid
-    x^i}}[ \log \omega(x^i \mid Y) ]
-\end{equation}
-where samples $\{x^i\}_{i=1}^N \sim q(x)$ are drawn from the posterior
-approximation, which is efficient by assumption.
+\[
+  \EE_{\hat{p}}[ -\log \omega(x \mid y)
+  ] \approx - \frac{1}{N} \sum_{i=1}^N \EE_{\hat{p}_{y \mid
+    x^i}}[ \log \omega(x^i \mid y) ]
+\]
+where samples $\{x^i\}_{i=1}^N \sim q(x)$.  Since $q(x)$ is a
+tractable distribution, this step can be done efficiently.
 
-The expectation $\EE_{Y\mid x^i}[\cdot]$ can be problematic, in which
-case we simulate the forward model and perform standard Monte Carlo
-integration.  This is also efficient given a Bayesian network, albeit
-with higher variance.  Both estimators are consistent by the LLN.
+The expectation $\EE_{y\mid x^i}[\cdot]$ is with respect to the
+forward model (likelihood), and can often be computed in closed-form.
+For some models, however, this term must be approximated, and requires
+simulation of the forward model.  This step is also efficient,
+assuming a Bayesian network, but leads to a higher variance estimate.
+Both estimators are consistent by the LLN.
 
 %% A similar approach can
 %% be taken for estimating gradients, if closed-form solutions are not
@@ -40,40 +43,65 @@ with higher variance.  Both estimators are consistent by the LLN.
 
 \subsection{Moment Matching Solution}\label{sec:moment_match}
 
-The reader may consider an alternative approach to approximating MI,
-which is as follows.  First, select a joint distribution $\omega(x,y)$
-in the exponential family,
+%% The reader may consider an alternative approach to approximating MI,
+%% which is as follows.  First, select a joint distribution $\omega(x,y)$
+%% in the exponential family,
+%% \[
+%%   \omega_{\eta}(x,y) = h(x,y)\exp\left\{ \eta^T \phi(x,y) - A(\eta)
+%%     \right\}.
+%% \]
+%% Next, approximate the distribution $\hat{p}(x,y)$ by minimizing
+%% $\KL{\hat{p}}{\omega}$ via moment matching, $\EE_{\hat{p}}[ \phi(x,y)
+%% ] = \EE_{\omega_{\eta}}[ \phi(x,y) ]$.  Finally, approximate mutual
+%% information as $I_{\hat{p}}(X;Y) \approx I_{\omega}(X;Y)$.
+
+%% We show how this approach is equivalent to the optimization
+%% of \SEC\ref{sec:optim} in some cases.
+
+Under some conditions the value of the MI
+bound~\eqref{eq:varmi_approx} takes a simple form at its optimum.  To
+see this, we first establish that standard moment matching of the
+auxiliary distribution is optimal for some models.  We then show that
+the value of the bound at this moment matching solution is equivalent
+to calculating entropy under the auxiliary distribution, which is
+tractable.
+
+One class of models for which the bound is easily calculated are those
+where the marginal $\hat{p}(y)$ is in the exponential family, for
+example if $y$ is a discrete label.  Then, consider the following
+joint exponential family,
 \[
   \omega_{\eta}(x,y) = h(x,y)\exp\left\{ \eta^T \phi(x,y) - A(\eta)
     \right\}.
 \]
-Next, approximate the distribution $\hat{p}(x,y)$ by minimizing
-$\KL{\hat{p}}{\omega}$ via moment matching, \mbox{$\EE_{\hat{p}}[ \phi(X,Y) ]
-= \EE_{\omega_{\eta}}[ \phi(X,Y) ]$}.  Then, approximate
-mutual information as $I_{\hat{p}}(X;Y) \approx I_{\omega}(X;Y)$.
-
-We show how this approach is equivalent to the optimization
-of \SEC\ref{sec:optim} in some cases.  Consider a model where the
-marginal $p(y)$ is in the exponential family, for example when $y$ is
-a discrete label.  The moment matching above then implies $\omega(y) =
-p(y)$ and so,
+Furthermore, consider the parameters $\eta^*$ satisfying the moment
+matching property,
+\begin{equation}\label{eq:moment_match}
+  \EE_{\hat{p}}[ \phi(x,y) ] = \EE_{\omega_{\eta}}[ \phi(x,y) ].
+\end{equation}
+Moment matching, combined with the assumption that $\hat{p}(y)$ is in
+the exponential family, implies that the marginal can be exactly
+calculated $\omega_{\eta}(y) = \hat{p}(y)$.  Using this equivalence,
+and rewriting~\eqref{eq:moment_match}, we have:
 \begin{equation}\label{eq:moment_match_cond}
-  \EE_p[ \phi(X,Y) ] = \EE_{p_Y}[ \EE_{\omega_{X\mid Y}}[ \phi(X,y)
+  \EE_{\hat{p}}[ \phi(x,y) ] = \EE_{\hat{p}_y}[ \EE_{\omega_{x\mid y}}[ \phi(x,y)
       \mid Y=y ] ],
 \end{equation}
-This shows that the moment matching solution solves the optimization
-in \SEC\ref{sec:optim} for the
-conditional \mbox{$\omega_{\theta}(x\mid y)
-= \omega_{\eta}(x,y) \div \int \omega_{\eta}(x,y) \deriv x$}.
+where $\omega_{\eta^{*}}(x\mid y)
+= \omega_{\eta^{*}}(x,y) \div \int \omega_{\eta^{*}}(x,y) \deriv
+x$.  \EQN\eqref{eq:moment_match_cond} is the optimality
+condition~\eqref{eq:stationary_point} of the MI lower bound.  This
+establishes that standard moment matching is optimal for the class of
+models where $\hat{p}(y)$ is in the exponential family.
 
-The moment matching solution leads to a simple bound evaluation.  To
-see this, let $\eta^*$ be the parameters of $\omega_{\eta}(x,y)$
-satisfying the moment matching conditions.  The cross entropy
-$H_{\hat{p}}(\omega(x,y))$ then equals,
+We now establish that the moment matching solution $\eta^{*}$ leads to
+a simple form of the bound~\eqref{eq:varmi_approx}.  By direct
+calculation, the cross entropy $H_{\hat{p}}(\omega_{\eta^*}(x,y))$
+equals,
 \begin{equation}
-  \EE_{\hat{p}}[ - \log h(x) ] - \eta^T \EE_{\omega_{\eta^*}}[ \phi(X,Y) ] + A(\eta).
+  \EE_{\hat{p}}[ - \log h(x,y) ] - \eta^T \EE_{\omega_{\eta^*}}[ \phi(x,y) ] + A(\eta).
 \end{equation}
-For distributions with constant base measure $h(x)$ we have that,
+For distributions with constant base measure $h(x,y)$ we have that,
 $H_{\hat{p}}(\omega_{\eta^*}(x,y)) = H(\omega_{\eta^*}(x,y))$.  By
 similar logic for the marginal entropy, and by applying the entropy
 chain rule, we have that:
@@ -84,8 +112,7 @@ The l.h.s.~is the relevant conditional entropy term from the MI
 bound~\eqref{eq:varmi_approx}.  The r.h.s.~is the entropy of the joint
 and marginal distributions $\omega(\cdot)$ at the optimal parameters,
 which is closed form.  We have thus shown that the aforementioned MI
-approximation is equivalent to optimizing the variational lower bound
-for some cases.
+approximation is equivalent to optimizing the variational lower bound.
 
 
 %% \subsection{BACKUP}
