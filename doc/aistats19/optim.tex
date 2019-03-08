@@ -1,13 +1,22 @@
-During planning we optimize the bound~\eqref{eq:varmi_approx}, with
-respect to the auxiliary distribution $\omega(x\mid y)$.  This
-optimization can be complicated for arbitrary distributions.  In this
-section we consider the optimization for the class auxiliary
-distribution which are in the exponential family, when conditioned on
-a hypothesized measurement.  This flexible family allows for nonlinear
-dependence on the observation $y$ as illustrated
+%% \begin{figure}[t]
+%%   \centering
+%%   \includegraphics[width=0.4\textwidth]{linear_approx}
+
+%%   \vspace{-5mm}\caption{\small VIP optimizes a lower bound on MI
+%%   w.r.t.~a distribution $\omega(x\mid y)$ approximating the
+%%   conditional $\hat{p}(x\mid y)$. We use a linear Gaussian
+%%   approximation in this case.  }  
+%% \end{figure} 
+
+Optimization of the bound~\eqref{eq:varmi_approx} with respect to the
+auxiliary distribution $\omega(x\mid y)$ can be complicated in
+general.  In this section we consider optimization for the class of
+auxiliary distributions which are in the exponential family, when
+conditioned on a hypothesized measurement.  This flexible family
+allows for nonlinear dependence on the observation $y$ as illustrated
 in \FIG\ref{fig:approx} (right).  We show that the resulting
-optimization is convex in the exponential family natural parameters.
-Also, optimality conditions yield a relaxation of the moment
+optimization is convex in the exponential family natural parameters
+and that optimality conditions yield a relaxation of the moment
 matching property for exponential families.
 
 %% We represent conditional exponential families with natural parameters
@@ -21,8 +30,8 @@ matching property for exponential families.
 
 \subsection{Optimizing the Auxiliary Distribution}
 
-Consider the set of conditional distributions in the exponential family
-$\omega \in \Wcal$ with PDF,
+Consider the set of conditional distributions in the exponential
+family having density,
 \begin{equation}
   \omega_\theta(x \mid y) = h(x)\exp\left( \theta(y)^T \phi(x,y) - A(\theta(y)) \right),
 \end{equation}
@@ -35,9 +44,9 @@ entropy,
   \theta^{*}(y) = \argmin_{\theta} J(\theta) \equiv \EE_{\hat{p}}[ - \log \omega_{\theta}(x \mid y) ].
 \end{equation}
 Convexity of $J(\theta)$ can be established by explicit calculation of
-the Hessian.  Alternatively, by adding \mbox{$-H(\hat{p})$} we have
-the following problem, which is equivalent to $J(\theta)$ up to
-constant terms,
+the Hessian.  Alternatively, by adding a constant \mbox{$-H(\hat{p})$}
+we have the following problem, which is equivalent to $J(\theta)$ up
+to constant terms,
 \begin{equation}\label{eq:dual}
   \theta^*(y) = \argmin_\theta \EE_{\hat{p}_y}\left[ \KL{\hat{p}_{x\mid y}}{\omega_\theta} \right]
 \end{equation}
@@ -76,11 +85,19 @@ conditions in terms of parameters $\eta$ are then,
   \EE_{p_y}\left[ \left( D_\eta \theta \right)^T \EE_{\omega_\eta}[\phi(x,y)]
     \right]
     \!= \EE_{p_y}\left[ \left( D_\eta \theta \right)^T \EE_{p_{x\mid
-          y}}[ \theta(x,y) ] \right]
+          y}}[ \phi(x,y) ] \right]
 \end{equation*}
 where $D_\eta \theta$ is the Jacobian matrix of partial derivatives.
 If $\theta(y)$ is convex in the parameters $\eta$ then the
 optimization \EQN\eqref{eq:dual} remains convex.
+
+In principle, the map $\theta_{\eta}(y)$ can be any parametric
+function, for example a neural network with parameters $\eta$.
+Indeed, in related work~\cite{chen2018learning} optimize the MI
+bound~\eqref{eq:varmi} w.r.t.~a neural network map for feature
+selection tasks.  However, such an approach violates the convexity
+properties above and leads to computation that is prohibitive for
+sequential decision making tasks.
 
 %% One approach is to
 %% represent $\theta_{\eta}(y)$ as a neural network, with parameters

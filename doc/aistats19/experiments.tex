@@ -1,11 +1,11 @@
 We demonstrate VIP in a variety of contexts including sensor
 selection, Bayesian experiment design, and active learning.  The
-comparison in each setting is to MCMC inference, or exact numerical
-inference when possible, along with empirical mean estimation of the
-MI for planning.  In this way, our motivation is to demonstrate
-comparable accuracy using more efficient variational methods.  For the
-more complex case of LLDA we in fact observe sustained improvements
-over baseline.
+primary comparison in most settings is to MCMC inference or exact
+numerical inference when possible, along with empirical mean
+estimation of the MI for planning.  In this way, our motivation is to
+demonstrate comparable accuracy using more efficient variational
+methods.  For the more complex case of LLDA we in fact observe
+sustained improvements over baseline.
 
 \subsection{Sensor Selection}
 
@@ -13,6 +13,14 @@ We begin with estimating target position in a network of sensors, each
 with fixed position.  Due to communication constraints we can draw
 measurements from only a single sensor at each time.  At each planning
 stage we must draw measurements from the most informative sensor.
+
+We consider estimation in, both, static and dynamic settings.  In both
+cases we optimize the MI lower bound over a linear Gaussian auxiliary
+distribution $\omega(x \mid y_t) = \Ncal(a y_t, \sigma^2)$, which can be
+solved in closed-form.  We compare the impact of inference on
+predictive accuracy by comparing exact numerical calculation,
+variational inference, and MCMC.
+
 
 %% We model sensor
 %% noise as depending on the relative distance to the unknown target;
@@ -30,6 +38,7 @@ and an observation model with noise variance increasing with relative
 distance: \mbox{$v_k(x) = |l_k - x| + v_1$}.
 
 \begin{figure}
+  \centering
   \begin{tabular}{cc}
     \hspace{-3mm}\includegraphics[width=0.24\textwidth]{ss_stateerr_maxIters100_Nsamp50_Nruns20.pdf} &
     \hspace{-5mm}\includegraphics[width=0.24\textwidth]{ss_MI_maxIters100_Nsamp50_Nruns20.pdf}
@@ -44,14 +53,15 @@ distance: \mbox{$v_k(x) = |l_k - x| + v_1$}.
     Empirical estimates based on the numerical posterior most
     accurately estimate MI.  VIP bound gap is consistently lower for
     more accurate EP posterior estimates as compared to
-    ADF.}  \label{fig:static}
+    ADF.}
+  \label{fig:static}
 \end{figure}
 
 \begin{figure*}[!t]
   \centering
   \hspace{-3mm}
-  \includegraphics[width=0.9\textwidth]{tracking_single}
-  \vspace{-3mm}
+  \includegraphics[width=1.0\textwidth]{tracking_single}
+
   \caption{\small\textbf{Nonlinear tracking example} in a field of
     $K=10$ equally spaced, stationary, sensors.  The best comparison
     is to numerical approximation to MI and the posterior distribution
@@ -62,14 +72,14 @@ distance: \mbox{$v_k(x) = |l_k - x| + v_1$}.
     under the same posterior approximation.  However, VIP shows lower
     accuracy when planning is computed against an approximate
     posterior, in this case particle filtering (PF).}
-  \vspace{-3mm}
+
   \label{fig:tracking_single}
 \end{figure*}
 
-\textbf{Dynamical System.} We extend the setting above to a dynamical
-system with nonlinear dynamics $p(x_t\mid x_{t-1})$ frequently used in
-the sequential Monte Carlo literature~\citep{kitagawa1996monte,
-  gordon1993novel, cappe2007overview},
+\textbf{Dynamical System.} We extend the setting to a nonlinear
+dynamical system frequently used in the sequential Monte Carlo
+literature~\citep{kitagawa1996monte, gordon1993novel,
+  cappe2007overview},
 \[
   \Ncal\left(0.5 x_{t-1} + 25 x_{t-1} / (1+x_{t-1}^2)
   + 8 \cos(1.2t), \sigma_u^2\right).
@@ -81,12 +91,7 @@ To demonstrate flexibility additionally replace variational inference
 with a particle filter.  \FIG\ref{fig:tracking_single} demonstrates an
 example scenario.
 
-\subsubsection{Results}
-In both models, static and dynamic, we optimize the MI lower bound
-over a linear Gaussian approximation $\omega(x \mid y_t)$, which can
-be solved in closed-form.  We compare the impact of inference on
-predictive accuracy by comparing exact numerical calculation,
-variational inference, and MCMC.
+%\subsubsection{Results}
 
 \textbf{State predictions competitive with empirical.}  In both cases
 VIP produces state estimates with similar or better accuracy to
@@ -114,9 +119,10 @@ MI calculation (\FIG\ref{fig:dynamic}; right).
 
 
 \begin{figure}[t]
+  \centering
   \begin{tabular}{cc}
-    \hspace{-3mm}\includegraphics[width=0.23\textwidth]{tracking_state_err} &
-    \hspace{-3mm}\includegraphics[width=0.23\textwidth]{tracking_sensor_err}
+    \hspace{-3mm}\includegraphics[width=0.24\textwidth]{tracking_state_err} &
+    \hspace{-3mm}\includegraphics[width=0.24\textwidth]{tracking_sensor_err}
   \end{tabular}
   
   \caption{\small\textbf{Nonlinear tracking for 20 random
@@ -127,7 +133,8 @@ MI calculation (\FIG\ref{fig:dynamic}; right).
   error quantiles.  \emph{Right:} Again, Exact VI shows the lowest RMS
   error of the selected sensor position w.r.t.~optimal, whereas PFVI
   and MCMI both have higher error, again with PFVI having larger
-  quantiles.}\vspace{-5mm}
+  quantiles.}
+  \vspace{-4mm}
   \label{fig:dynamic}
 
 \end{figure}
@@ -138,15 +145,17 @@ MI calculation (\FIG\ref{fig:dynamic}; right).
 
 \subsection{Gene Regulatory Network}
 
-Next, we demonstrate VIP for Bayesian experimental design in the
-discovery of causal gene interactions.  Specifically, we develop our
-approach for the sparse linear model of \cite{steinke2007experimental,
-  seeger2008bayesian}.
+\cite{steinke2007experimental}, and later~\cite{seeger2008bayesian},
+introduced a heuristic approach to sequential experiment design which
+shares components of our current method.  Their approach relies on EP
+inference and related approximations of the MI utility.  Using an
+example from these papers, we compare VIP for the discovery of causal
+gene interactions.
 
 Let $x\in\RR^n$ represent the deviation of $n$ gene expression levels
 from steady state.  The matrix $A\in\RR^{n\times n}$ represents causal
-interactions, with sparse entries drawn independently from a Laplace
-distribution.  The model is,
+interactions, with sparse entries drawn i.i.d.~from a Laplace
+distribution,
 \begin{equation}\label{eq:sparselin}
   \!\!\!p(A,x) \propto \prod_{i=1}^n \Ncal(u_i \mid a_i^T
     x, \sigma^2) \prod_{j=1}^n \textrm{Laplace}(a_{ij} \mid \lambda) 
@@ -155,8 +164,8 @@ where $a_i$ is the $i^{\text{th}}$ row of matrix $A$.  Here $u$
 represents an external control vector (perturbation).  Interventions
 include up regulating $u_i>0$, down regulation $u_i<0$ and no
 intervention $u_i=0$ for the $i^{\text{th}}$ gene.  Observe that the
-joint~\eqref{eq:sparselin} is defined up to normalization since the
-likelihood term is not a normalized distribution of $x$.
+joint~\eqref{eq:sparselin} is unnormalized since the likelihood term
+is not a normalized distribution of $x$.
 
 \begin{figure}[t]
   \centering
@@ -177,17 +186,18 @@ likelihood term is not a normalized distribution of $x$.
   \label{fig:sparselin}
 \end{figure}
 
-As exact inference is infeasible, we instead compare to the method
-developed in \cite{steinke2007experimental, seeger2008bayesian}, which
-maintains a mean field Gaussian posterior approximation using EP,
-\mbox{$q(A) = \prod_i p_i^{(0)}(a_i) \prod_j
-  \widetilde{t}_{ij}(a_{ij})$}.  Here, $p^{(0)}_i(a_i)$ approximates
-the base measure \mbox{$N(u_i \mid a_i^T x, \sigma^2)$} and
-\mbox{$\widetilde{t}_{ij}(a_{ij})$} the Laplace factors.
-
-Given past observations $\Dcal$ and a new control and observation pair
-$\{x_*,u_*\}$, maximizing MI is (approximately) equivalent to
-maximizing \mbox{$\EE_{x_*}\!\left[\, \KL{q'}{q} \,\right]$},
+We compare to the variational method of~\cite{steinke2007experimental}
+and later~\cite{seeger2008bayesian} which maintain a mean field
+Gaussian posterior approximation using EP:
+\[
+q(A) = \prod_i p_i^{(0)}(a_i) \prod_j \widetilde{t}_{ij}(a_{ij}).
+\]
+Here, $p^{(0)}_i(a_i)$ approximates the base measure \mbox{$N(u_i \mid
+  a_i^T x, \sigma^2)$} and \mbox{$\widetilde{t}_{ij}(a_{ij})$} the
+Laplace factors.  Given past observations $\Dcal$ and a new control
+and observation pair $\{x_*,u_*\}$, maximizing MI is (approximately)
+equivalent to maximizing \mbox{$\EE_{x_*}\!\left[\, \KL{q'}{q}
+    \,\right]$},
 %% \begin{equation}\label{eq:max_kl}
 %%   \max_{u_*} \; \EE_{x_*}\!\left[\, \KL{q'}{q} \,\right],
 %% \end{equation}
@@ -243,26 +253,25 @@ Random selection still performs well in this regime.
 
 \subsection{Active Learning for Labeled LDA}\label{sec:llda}
 
-%% \begin{figure*}
-%%   \begin{tabular}{cccc}
-%%     \includegraphics[width=0.24\textwidth]{llda/Gibbs_iter0} &
-%%     \includegraphics[width=0.24\textwidth]{llda/Gibbs_iter8} &
-%%     \includegraphics[width=0.24\textwidth]{llda/Gibbs_iter4} &
-%%     \includegraphics[width=0.24\textwidth]{llda/Gibbs_iter8} \\
-    
-%%     \includegraphics[width=0.24\textwidth]{llda/Variational_iter0} &
-%%     \includegraphics[width=0.24\textwidth]{llda/Variational_iter2} &
-%%     \includegraphics[width=0.24\textwidth]{llda/Variational_iter4} &
-%%     \includegraphics[width=0.24\textwidth]{llda/Variational_iter8}
-%%   \end{tabular}
-%%   \caption{\small\textbf{Labeled LDA.} Blah.}
-%% \end{figure*}
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.45\textwidth]{llda/llda_model.pdf}
+  
+  \caption{\small\textbf{Labeled LDA} graphical model augments
+    standard LDA with semi-supervised annotations $y_{dn}$ shown as
+    shaded dashed nodes.  Each stage of active learning selects
+    unlabeled item $(d,n)$ maximizing mutual information
+    $I(\Psi,Y_{dn})$ between topics $\Psi$ and annotations $Y$, as in
+    \EQN\eqref{eq:maxmi_llda}.  }
+  \label{fig:llda_model}
+\end{figure}
+
 
 \begin{figure*}
   \begin{tabular}{ccc}
     \hspace{-3mm}\includegraphics[width=0.32\textwidth]{llda/topics_random_runid_5} &
     \includegraphics[width=0.32\textwidth]{llda/topics_gibbs_runid_5} &
-    \includegraphics[width=0.32\textwidth]{llda/topics_vip_runid_5} \vspace{-3mm}\\
+    \includegraphics[width=0.32\textwidth]{llda/topics_vip_runid_5} \\
     {\small\textbf{Gibbs + Random}} & {\small\textbf{Gibbs +
         Empirical}} & {\small\textbf{EP + VIP}}
   \end{tabular}
@@ -278,107 +287,102 @@ Random selection still performs well in this regime.
     estimates have higher noise in low probability regions.
     Annotation based on random selection (\emph{left}) performs poorly
     regardless of the inference method -- Gibbs shown.}
-  \vspace{-5mm}
+
   \label{fig:llda_topics}
 \end{figure*}
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.45\textwidth]{llda/llda_tverr} \vspace{-2mm}
+  \hspace{-4mm}\includegraphics[width=0.53\textwidth]{llda/llda_tverr} 
   
-  \caption{\small\textbf{Labeled LDA.} Total variation error (absolute
-  error) for all topics on the ``bars'' dataset across 10 random
-  trials.  Variational planning with fully parameterized softmax shows
-  consistent improvement over Gibbs on average (solid).  Gibbs
-  estimates show tighter standard deviation (shaded) for planning
-  based on MI estimates.  Both inference methods perform similarly
-  for random selection.}
+  \caption{\small\textbf{Total variation (TV) error} for all topics on
+    the ``bars'' dataset across 10 random trials.  Variational
+    planning with fully parameterized softmax shows consistent
+    improvement over Gibbs on average (solid).  Gibbs estimates show
+    tighter standard deviation (shaded) for planning based on MI
+    estimates.  Both inference methods perform similarly for random
+    selection.}
   
   \label{fig:llda_tv}
 \end{figure}
 
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.45\textwidth]{llda/bound_comparison}
+%% \begin{figure}[t]
+%%   \centering
+%%   \includegraphics[width=0.45\textwidth]{llda/bound_comparison}
   
-  \caption{\small\textbf{LLDA Bound Comparison.} Variational MI
-  estimates for annotations using three approximating families, ranked
-  in order of increasing value by empirical estimate of MI.  An ideal
-  approximation would show monotonically increasing values with little
-  gap.  The conditional Dirichlet model is a poor approximation.  Two
-  variations on the softmax distribution provide tighter bounds, with
-  the fully parameterized softmax being slightly
-  preferred.}  \label{fig:llda_bound}
-\end{figure}
+%%   \caption{\small\textbf{LLDA Bound Comparison.} Variational MI
+%%   estimates for annotations using three approximating families, ranked
+%%   in order of increasing value by empirical estimate of MI.  An ideal
+%%   approximation would show monotonically increasing values with little
+%%   gap.  The conditional Dirichlet model is a poor approximation.  Two
+%%   variations on the softmax distribution provide tighter bounds, with
+%%   the fully parameterized softmax being slightly
+%%   preferred.}  \label{fig:llda_bound}
+%% \end{figure}
 
-Labeled LDA (LLDA) is one of several proposed semi-supervised
-extensions to LDA~\citep{blei2003latent}.  The standard unsupervised
-LDA model is given by,
+Labeled LDA (LLDA) is a semi-supervised extension of
+LDA~\citep{blei2003latent}.  For $K$ topics, $D$ documents
+$d=1,\ldots,D$, and $N_d$ words per document, the standard
+unsupervised LDA model is given by,
 \begin{align*}
-  \theta_d &\sim \text{Dirichlet}(\alpha), &&\text{For}\; d=1,\ldots,D \\
-  \psi_k &\sim \text{Dirichlet}(\beta_k), &&\text{For}\; k=1,\ldots,K \\
-  z_{dn} \mid \theta_d &\sim \text{Cat}(\theta_d), &&\text{For}\;
-    n=1,\ldots,N_d \\
-  w_{dn} \mid z_{dn}, \psi &\sim \text{Cat}(\psi_{z_{dn}}) &&
+  \theta_d &\sim \text{Dirichlet}(\alpha) && \text{Topic proportions}\\
+  \psi_k &\sim \text{Dirichlet}(\beta_k) && \text{Topics}\\
+  z_{dn} \mid \theta_d &\sim \text{Cat}(\theta_d) && \text{Topic Labels}\\
+  w_{dn} \mid z_{dn}, \psi &\sim \text{Cat}(\psi_{z_{dn}}) && \text{Words}
 \end{align*}
-LLDA augments the standard LDA model with semi-supervised annotations
-for each word~\citep{flaherty2005latent}.  We model annotations as
-noisy observations of the true topic assignment: \mbox{$y_{dn} \mid
-  z_{dn} \sim \text{Cat}(\pi_{z_{dn}})$}.  In this way, annotations
-induce a preferred ordering of topic labels in the posterior,
-producing interpretable topics.  There are variations on this
-approach~\citep{ramage2009labeled} which model annotations at the
-document level, but we do not consider them here.
+As shown in \FIG\ref{fig:llda_model}, LLDA introduces semi-supervised
+annotations for each word~\citep{flaherty2005latent}.  We model
+annotations as noisy observations of the true topic assignment,
+\[
+  y_{dn} \mid z_{dn} \sim \text{Cat}(\pi_{z_{dn}}).
+\]
+This choice ensures interpretable topics as the posterior concentrates
+on a preferred ordering of labels.  Other supervised LDA variations
+exist~\citep{ramage2009labeled} but we do not consider them here.
 
-We perform active learning, which falls under the annotation model of
-\SEC\ref{sec:annotation}.  At each learning stage $t$, the planner
-selects an annotation $y_{d^*n^*}$ maximizing MI over the topics,
+Our evaluation uses the ``bars'' dataset~\citep{griffiths2004finding}
+where topics can be visualized as a set of vertical and horizontal
+\emph{bars} (see \FIG\ref{fig:llda_topics}).  To amplify the effect of
+informative annotations we model a \emph{rare} topic with a
+non-symmetric Dirichlet prior over topic proportions: $\alpha = (0.05, 1, 1,
+\ldots, 1)^T$.
+
+
+\textbf{Active Learning} At each learning stage $t$ the planner
+selects an annotation $y_{d^*n^*}$ maximizing posterior MI:
 \begin{equation}
   (d^*,n^*) = \argmax_{(d,n)} I(\Psi, Y_{dn} \mid \Wcal, \Ycal_{t-1}),
+  \label{eq:maxmi_llda}
 \end{equation}
-given the observed corpus of words $\Wcal$ and previous annotations
-$\Ycal_{t-1}$.  We demonstrate active learning on the ``bars''
-data~\citep{griffiths2004finding} in which topics can be arranged and
-visualized as a set of vertical and horizontal \emph{bars} (see
-\FIG\ref{fig:llda_topics}).  To amplify the effect of poorly informed
-selections we additionally model a \emph{rare} topic by setting a
-non-symmetric Dirichlet prior on topic proportions: $\alpha = (0.05,
-1, 1, \ldots, 1)^T$.
+with observed annotations $\Ycal_{t-1}$ and $\Wcal$ the corpus of
+words.  \EQN\eqref{eq:maxmi_llda} is an instance of the annotation
+model (\SEC\ref{sec:annotation}) as integration over nuisance
+variables induces dependence among annotations.  We choose a softmax
+auxiliary distribution:
+\[
+  \omega(y = k \mid \psi) \propto \exp( w_k^T \text{vec}(\psi_k) + w_{0k} ),
+\]
+which has a number of beneficial properties: first, it ensures
+convexity of the planning objective~\eqref{eq:maxmi_llda} in the
+parameters $w$ (\SEC\ref{sec:optim}).  Second, the marginal
+distribution $p(y)$ is in the exponential family (discrete) thus
+ensuring simple evaluation of the MI bound (\SEC\ref{sec:eval}).
 
-Empirical MI estimates based on Gibbs samples involve averages across
-independent MCMC chains, and are thus sensitive to topic label
-switching~\citep{stephens2000dealing}.  We found that alignment to any
-individual sample (e.g. MAP) produced poor results, both in terms of
-the posterior mean estimate of the topics as well as entropy
-estimates.  We instead relabel Gibbs samples to minimize absolute
-error w.r.t.~the ground truth topics.  Such an approach would not be
-feasible in typical cases as it requires knowledge of the true topics,
-but represents the best achievable estimate over the given samples.  Our
-variational planning approach does not suffer similar issues as
-samples are drawn from a consistent topic posterior distribution.
+\textbf{Lower topic error compared to MCMC.}  We compare VIP using EP
+inference~\citep{broderick2013streaming} to empirical MI planning
+based on Gibbs samples.  Observe that MI estimates require averaging
+over topic samples, and thus must account for topic label switching.
+We found that any reasonable alignment (e.g. MAP) resulted in poor
+estimates~\citep{stephens2000dealing}.  We instead relabel Gibbs
+samples to minimize absolute error w.r.t.~the \emph{true topics},
+which would not be feasible in practice.  \FIG\ref{fig:llda_tv}
+reports total variation (TV) error across topics $\sum_k \|\psi_k -
+\hat{\psi}_k\|_1$, based on the posterior mean estimate $\hat{\psi}$.
+We found that increasing from the reported 1000 Gibbs samples did not
+lead to significant improvements.  We instead suspect that poor MCMC
+results are due to a combination of MI estimator bias and local
+optima.
 
-\textbf{Lower topic error compared to Monte Carlo.}
-\FIG\ref{fig:llda_tv} reports total variation (TV) error across topics
-$\sum_k \|\psi_k - \hat{\psi}_k\|_1$, based on the posterior mean
-estimate $\hat{\psi}$.  The TV error is invariant to topic ordering
-as we solve a bipartite matching to compute the lowest TV error across
-labels.  Increasing MCMC samples from the reported 1000 samples does
-not lead to significant improvements.  We instead suspect that poor
-MCMC results are due to a combination of MI estimator bias, inference
-local optima, and topic label switching.
-
-\textbf{More flexible approximations lead to better bounds.}  We
-consider three forms of the auxiliary distribution $\omega(\cdot)$ in
-the MI lower bound: a conditional Dirichlet, $\omega(\psi \mid y=j) =
-\prod_k \text{Dirichlet}(\psi_k \mid \gamma_{kj})$, a \emph{minimal}
-softmax where class conditionals depend on a single topic $\omega(y =
-k \mid \psi) \propto \exp( w_k^T \text{vec}(\psi_k) + w_{0k} )$, and
-where class conditionals weight all topics \mbox{$\omega(y = k \mid
-  \psi) \propto \exp( w_k^T \text{vec}(\psi) + w_{0k}
-  )$}. \FIG\ref{fig:llda_bound} compares variational MI estimates to
-that of an empirical estimate for each of these families.  We find
-that the larger parameter set of this final family leads to more
-accurate bounds overall.
 
 
 %% MI as $I(\Psi,Y_{dn}) \geq H(Y_{dn})

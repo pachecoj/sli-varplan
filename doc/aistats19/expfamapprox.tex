@@ -4,10 +4,10 @@ Planning, however, requires the value of this bound at its optimum.
 For some models this evaluation is straightforward, but others require
 estimation.  We begin with a discussion of computing the bound for
 complex models.  We conclude with a class of models for which
-evaluation is simple, and corresponds to the standard moment matching
-property.
+evaluation can be done in closed form, and corresponds to the standard
+moment matching property.
 
-\subsection{Bound Estimation}
+\subsection{Empirical Bound Estimation}
 
 %% For simple natural parameter functions, such as linear $\theta(y) =
 %% Ay$, the MI bound can often be optimized and evaluated in closed
@@ -29,10 +29,9 @@ entropy,
 \]
 where samples $\{x^i\}_{i=1}^N \sim q(x)$.  Since $q(x)$ is a
 tractable distribution, this step can be done efficiently.
-
-The expectation $\EE_{y\mid x^i}[\cdot]$ is with respect to the
-forward model (likelihood), and can often be computed in closed-form.
-For some models, however, this term must be approximated, and requires
+Expectation $\EE_{y\mid x^i}[\cdot]$ is with respect to the forward
+model (likelihood), and can often be computed in closed-form.  For
+some models, however, this term must be approximated, and requires
 simulation of the forward model.  This step is also efficient,
 assuming a Bayesian network, but leads to a higher variance estimate.
 Both estimators are consistent by the LLN.
@@ -58,18 +57,13 @@ Both estimators are consistent by the LLN.
 %% We show how this approach is equivalent to the optimization
 %% of \SEC\ref{sec:optim} in some cases.
 
-Under some conditions the value of the MI
-bound~\eqref{eq:varmi_approx} takes a simple form at its optimum.  To
-see this, we first establish that standard moment matching of the
-auxiliary distribution is optimal for some models.  We then show that
-the value of the bound at this moment matching solution is equivalent
-to calculating entropy under the auxiliary distribution, which is
-tractable.
+Under some conditions, the MI bound~\eqref{eq:varmi_approx} is easily
+optimized and evaluated by standard moment matching of the auxiliary
+distribution.  One such class occurs when the marginal $\hat{p}(y)$ is
+in the exponential family.  Note that $\hat{p}(x,y)$ need not be
+jointly exponential, for example the condition holds if $y$ is discrete .
 
-One class of models for which the bound is easily calculated are those
-where the marginal $\hat{p}(y)$ is in the exponential family, for
-example if $y$ is a discrete label.  Then, consider the following
-joint exponential family,
+Now, consider the following joint exponential family,
 \[
   \omega_{\eta}(x,y) = h(x,y)\exp\left\{ \eta^T \phi(x,y) - A(\eta)
     \right\}.
@@ -91,28 +85,30 @@ where $\omega_{\eta^{*}}(x\mid y)
 = \omega_{\eta^{*}}(x,y) \div \int \omega_{\eta^{*}}(x,y) \deriv
 x$.  \EQN\eqref{eq:moment_match_cond} is the optimality
 condition~\eqref{eq:stationary_point} of the MI lower bound.  This
-establishes that standard moment matching is optimal for the class of
-models where $\hat{p}(y)$ is in the exponential family.
-
-We now establish that the moment matching solution $\eta^{*}$ leads to
-a simple form of the bound~\eqref{eq:varmi_approx}.  By direct
-calculation, the cross entropy $H_{\hat{p}}(\omega_{\eta^*}(x,y))$
-equals,
+solution also leads to a simple form of the MI
+bound~\eqref{eq:varmi_approx}.  By direct calculation, the cross
+entropy $H_{\hat{p}}(\omega_{\eta^*}(x,y))$ equals,
 \begin{equation}
   \EE_{\hat{p}}[ - \log h(x,y) ] - \eta^T \EE_{\omega_{\eta^*}}[ \phi(x,y) ] + A(\eta).
 \end{equation}
 For distributions with constant base measure $h(x,y)$ we have that,
-$H_{\hat{p}}(\omega_{\eta^*}(x,y)) = H(\omega_{\eta^*}(x,y))$.  By
+$H_{\hat{p}}(\omega_{\eta^*}(X,Y)) = H_{\omega_{\eta^*}}(X,Y)$.  By
 similar logic for the marginal entropy, and by applying the entropy
 chain rule, we have that:
 \begin{equation}
-  H_{\hat{p}}( \omega_{\eta^*}(x\mid y) ) = H(\omega_{\eta^*}(x,y)) - H(\omega_{\eta^*}(y)).
+  H_{\hat{p}}( \omega_{\eta^*}(X\mid Y) ) = H_{\omega_{\eta^*}}(X,Y)
+    - H_{\omega_{\eta^*}}(Y).
 \end{equation}
 The l.h.s.~is the relevant conditional entropy term from the MI
 bound~\eqref{eq:varmi_approx}.  The r.h.s.~is the entropy of the joint
-and marginal distributions $\omega(\cdot)$ at the optimal parameters,
-which is closed form.  We have thus shown that the aforementioned MI
-approximation is equivalent to optimizing the variational lower bound.
+and marginal distributions $\omega_{\eta^{*}}(\cdot)$ at the optimal parameters,
+which is closed form.
+
+To summarize, we have shown one sufficient condition, namely that
+$\hat{p}(y)$ is an exponential family, which leads to efficient
+evaluation of the MI bound.  We further conjecture that broader
+conditions exist which lead to the same moment-matching optimization
+and evaluation of the variational MI bound.
 
 
 %% \subsection{BACKUP}

@@ -3,11 +3,12 @@
 \include{packages}
 \include{macros}
 
+
 %\usepackage{aistats2019}
 % If your paper is accepted, change the options for the package
 % aistats2019 as follows:
 %
-\usepackage{aistats2019}
+\usepackage[accepted]{aistats2019}
 %
 % This option will print headings for the title of your paper and
 % headings for the authors names, plus a copyright note at the end of
@@ -40,14 +41,13 @@
 % command to supply a shorter version of the authors names so that
 % they can be used as headings (for example, use only the surnames)
 %
-%\runningauthor{Surname 1, Surname 2, Surname 3, ...., Surname n}
+\runningauthor{J. Pacheco and J.W. Fisher, III}
 
 \twocolumn[
 
-  \aistatstitle{Variational Information Planning for Sequential Decision Making} ]
-
-%% \aistatsauthor{ Author 1 \And Author 2 \And  Author 3 }
-%% \aistatsaddress{ Institution 1 \And  Institution 2 \And Institution 3 } ]
+  \aistatstitle{Variational Information Planning for Sequential Decision Making} 
+  \aistatsauthor{ Jason Pacheco \And John W. Fisher, III}
+  \aistatsaddress{ MIT CSAIL \And MIT CSAIL} ]
 
 \begin{abstract}  
   We consider the setting of sequential decision making where, at each
@@ -80,7 +80,7 @@
 \section{Optimization for Conditional Exponential Families}\label{sec:optim}
 \input{optim}
 
-\section{Evaluating the MI Bound}
+\section{Evaluating the MI Bound}\label{sec:eval}
 \input{expfamapprox}
 
 \section{Experimental Results}\label{sec:experiments}
@@ -88,6 +88,11 @@
 
 \section{Conclusion}
 \input{conclusion}
+
+\textbf{Acknowledgments} The first author would like to thank Sue
+Zheng for useful technical discussions.  This work was partially
+supported by the ONR (N00014-17-1-2072), the Department of Energy
+(CVT Consortium), and DNDO under the ARI program.
 
 \bibliography{refs}
 \bibliographystyle{abbrvnat}
